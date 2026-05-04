@@ -49,7 +49,7 @@ iframe {
   border:2px solid white;
 }
 
-/* Control panel */
+/* Panel */
 .panel {
   position:fixed;
   bottom:20px;
@@ -92,7 +92,7 @@ button {
 <iframe src="https://vdo.ninja/?view=quocdang&cleanoutput&noaudio&buffer=0"></iframe>
 
 <!-- Panel điều khiển -->
-<div class="panel">
+<div class="panel" id="panel">
   <input id="input1" placeholder="Tên đỏ">
   <input id="input2" placeholder="Tên xanh">
   <input id="scoreInput" placeholder="Tỉ số (vd 1-0)">
@@ -100,13 +100,20 @@ button {
 </div>
 
 <script>
-// Load từ localStorage (giữ trạng thái)
+// Ẩn panel nếu có ?live=1
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get("live") === "1") {
+  document.getElementById("panel").style.display = "none";
+}
+
+// Load dữ liệu cũ
 window.onload = () => {
   if(localStorage.name1) name1.innerText = localStorage.name1;
   if(localStorage.name2) name2.innerText = localStorage.name2;
   if(localStorage.score) score.innerText = localStorage.score;
 };
 
+// Update realtime
 function update() {
   const n1 = input1.value;
   const n2 = input2.value;
