@@ -1,190 +1,209 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KĐQ Live Stream</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KĐQ Live Stream - Pro Overlay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Reset cơ bản để tránh tràn màn hình */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-<style>
-body {
-  margin:0;
-  background:black;
-  font-family:'Montserrat', sans-serif;
-}
+        body {
+            margin: 0;
+            background: #000;
+            font-family: 'Montserrat', sans-serif;
+            overflow: hidden; /* Không cho cuộn trang */
+            height: 100vh;
+        }
 
-/* VIDEO */
-iframe {
-  position:fixed;
-  width:100%;
-  height:100%;
-  border:none;
-}
+        /* VIDEO - Full màn hình */
+        iframe {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            z-index: 1;
+        }
 
-/* OVERLAY */
-.overlay {
-  position: fixed;
-  top: 20px;
-  left: 0;
-  width: 100%;
-  height: 0;
-  z-index: 10;
-  pointer-events: none;
+        /* OVERLAY - Chứa tên Player */
+        .overlay {
+            position: fixed;
+            top: 30px; /* Cách top xa hơn xíu cho thoáng */
+            left: 0;
+            width: 100%;
+            z-index: 10;
+            pointer-events: none; /* Click xuyên qua để không vướng video */
+            display: flex;
+            justify-content: space-between;
+            padding: 0 60px;
+        }
 
-}
-.player {
-  position: absolute;
-  padding: 14px 32px;
-  border-radius: 14px;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 400;
-  font-size: 20px;
-  text-transform: none;
-  letter-spacing: -1.5px;
-  color: #fff;
+        .player {
+            min-width: 180px;
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 22px;
+            color: #fff;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
 
-  /* nền kính mờ */
-  backdrop-filter: blur(8px);
-  background: rgba(0,0,0,0.35);
+        /* Phe Đỏ (Tiên) */
+        .red {
+            background: linear-gradient(135deg, rgba(255, 42, 42, 0.9), rgba(122, 0, 0, 0.9));
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.4), 0 8px 25px rgba(0,0,0,0.6);
+        }
 
-  /* viền sáng */
-  border: 2px solid rgba(255,255,255,0.25);
+        /* Phe Xanh (Hậu) */
+        .blue {
+            background: linear-gradient(135deg, rgba(42, 123, 255, 0.9), rgba(0, 31, 122, 0.9));
+            box-shadow: 0 0 20px rgba(0, 120, 255, 0.4), 0 8px 25px rgba(0,0,0,0.6);
+        }
 
-  /* bóng + nổi */
-  box-shadow:
-    0 8px 25px rgba(0,0,0,0.8),
-    inset 0 0 10px rgba(255,255,255,0.1);
+        /* PANEL ĐIỀU KHIỂN */
+        .panel {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 20, 20, 0.9);
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 20;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: opacity 0.5s ease;
+        }
 
-  /* glow chữ */
-  text-shadow:
-    0 0 5px rgba(0,0,0,0.8),
-    0 0 10px rgba(0,0,0,0.6);
-}
+        input {
+            background: #333;
+            color: white;
+            padding: 10px 15px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            outline: none;
+            font-family: 'Montserrat', sans-serif;
+        }
 
-/* 🔴 BÊN TRÁI */
-.red {
-  left: 80px;
+        input:focus {
+            border-color: #00c853;
+        }
 
-  background: linear-gradient(135deg, #ff2a2a, #7a0000);
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #00c853;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
 
-  box-shadow:
-    0 0 15px rgba(255,0,0,0.6),
-    0 8px 25px rgba(0,0,0,0.8);
-}
+        button:hover {
+            background: #00e676;
+            transform: scale(1.05);
+        }
 
-/* 🔵 BÊN PHẢI */
-.blue {
-  right: 80px;
-
-  background: linear-gradient(135deg, #2a7bff, #001f7a);
-
-  box-shadow:
-    0 0 15px rgba(0,120,255,0.6),
-    0 8px 25px rgba(0,0,0,0.8);
-}
-
-/* PANEL */
-.panel {
-  position:fixed;
-  bottom:20px;
-  left:50%;
-  transform:translateX(-50%);
-  background:rgba(0,0,0,0.7);
-  padding:10px;
-  border-radius:10px;
-  display:flex;
-  gap:8px;
-  z-index:20;
-}
-
-input {
-  padding:6px;
-  border:none;
-  border-radius:5px;
-}
-
-button {
-  padding:6px 10px;
-  border:none;
-  border-radius:5px;
-  background:#00c853;
-  color:white;
-  cursor:pointer;
-}
-/* 📱 FIX PANEL MOBILE */
-@media (max-width: 768px) {
-
-  .panel {
-    flex-direction: column;   /* xếp dọc */
-    width: 90%;
-    left: 50%;
-    transform: translateX(-50%);
-    gap: 10px;
-    padding: 12px;
-  }
-
-  .panel input {
-    width: 100%;
-    font-size: 16px;
-    padding: 10px;
-  }
-
-  .panel button {
-    width: 100%;
-    font-size: 16px;
-    padding: 12px;
-  }
-.panel button {
-  background:#00c853;
-  font-weight: bold;
-}
-}
-</style>
+        /* MOBILE OPTIMIZATION */
+        @media (max-width: 768px) {
+            .overlay {
+                padding: 0 20px;
+                top: 20px;
+            }
+            .player {
+                min-width: 120px;
+                font-size: 16px;
+                padding: 8px 15px;
+            }
+            .panel {
+                flex-direction: column;
+                width: 85%;
+            }
+        }
+    </style>
 </head>
-
 <body>
 
-<!-- OVERLAY -->
-<div class="overlay">
-  <div class="player red" id="name1">Tiên</div>
-  <div class="player blue" id="name2">Hậu</div>
-</div>
+    <!-- VIDEO LUỒNG CHÍNH -->
+    <iframe src="https://vdo.ninja/?view=quocdang&cleanoutput&noaudio&buffer=0"></iframe>
 
-<!-- VIDEO -->
-<iframe src="https://vdo.ninja/?view=quocdang&cleanoutput&noaudio&buffer=0"></iframe>
+    <!-- LỚP PHỦ THÔNG TIN -->
+    <div class="overlay">
+        <div class="player red" id="name1">Tiên</div>
+        <div class="player blue" id="name2">Hậu</div>
+    </div>
 
-<!-- PANEL -->
-<div class="panel" id="panel">
-  <input id="input1" placeholder="Tên đỏ">
-  <input id="input2" placeholder="Tên xanh">
-  <button onclick="update()">Cập nhật</button>
-</div>
+    <!-- BẢNG ĐIỀU KHIỂN -->
+    <div class="panel" id="panel">
+        <input id="input1" placeholder="Tên Đỏ (Tiên)">
+        <input id="input2" placeholder="Tên Xanh (Hậu)">
+        <button onclick="updateNames()">Cập nhật ngay</button>
+    </div>
 
-<script>
-// lấy tên từ URL
-const url = new URLSearchParams(window.location.search);
+    <script>
+        // 1. Khởi tạo dữ liệu từ URL
+        const params = new URLSearchParams(window.location.search);
+        
+        const initialRed = params.get("d") || "Tiên";
+        const initialBlue = params.get("x") || "Hậu";
 
-const red = url.get("d") || "Tiên";
-const blue = url.get("x") || "Hậu";
+        // Gán tên ban đầu
+        const elRed = document.getElementById("name1");
+        const elBlue = document.getElementById("name2");
+        const panel = document.getElementById("panel");
 
-// hiển thị tên
-document.getElementById("name1").innerText = red;
-document.getElementById("name2").innerText = blue;
+        elRed.innerText = initialRed;
+        elBlue.innerText = initialBlue;
 
-// ẩn panel nếu có live=1 HOẶC có tên trong link (OBS)
-if (url.get("live") === "1" || url.get("d") || url.get("x")) {
-  document.getElementById("panel").style.display = "none";
-}
+        // 2. Ẩn panel nếu đang Live hoặc đã có tham số (Dùng cho OBS Browser Source)
+        if (params.get("live") === "1" || params.get("d") || params.get("x")) {
+            panel.style.opacity = "0";
+            // Đợi mờ dần rồi ẩn hẳn để không chặn click
+            setTimeout(() => { panel.style.display = "none"; }, 500);
+        }
 
-// khi bấm cập nhật → reload link mới
-function update() {
-  const n1 = document.getElementById("input1").value || "Tiên";
-  const n2 = document.getElementById("input2").value || "Hậu";
+        // 3. Hàm cập nhật KHÔNG reload trang
+        function updateNames() {
+            const n1 = document.getElementById("input1").value.trim() || "Tiên";
+            const n2 = document.getElementById("input2").value.trim() || "Hậu";
 
-  const newURL = `?d=${encodeURIComponent(n1)}&x=${encodeURIComponent(n2)}`;
-  window.location.search = newURL;
-}
-</script>
+            // Cập nhật text ngay lập tức
+            elRed.innerText = n1;
+            elBlue.innerText = n2;
 
+            // Cập nhật URL thầm lặng (không reload iframe)
+            const newURL = `?d=${encodeURIComponent(n1)}&x=${encodeURIComponent(n2)}`;
+            window.history.pushState({}, '', newURL);
+
+            // Hiệu ứng phản hồi nhẹ
+            const btn = document.querySelector('button');
+            btn.innerText = "Đã lưu!";
+            btn.style.background = "#2196F3";
+            setTimeout(() => {
+                btn.innerText = "Cập nhật ngay";
+                btn.style.background = "#00c853";
+            }, 2000);
+        }
+
+        // Nhấn Enter để cập nhật cho nhanh
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                updateNames();
+            }
+        });
+    </script>
 </body>
 </html>
