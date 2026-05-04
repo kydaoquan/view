@@ -36,30 +36,55 @@ iframe {
   text-transform: uppercase;
   letter-spacing: 1.5px;
 }
-/* STYLE CHUNG */
 .player {
   position: absolute;
-  padding: 12px 28px;
-  border-radius: 12px;
+  padding: 14px 32px;
+  border-radius: 14px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
   color: #fff;
-  font-weight: bold;
-  font-size: 20px;
-  letter-spacing: 1px;
-  border: 2px solid rgba(255,255,255,0.3);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 6px 15px rgba(0,0,0,0.6);
+
+  /* nền kính mờ */
+  backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.35);
+
+  /* viền sáng */
+  border: 2px solid rgba(255,255,255,0.25);
+
+  /* bóng + nổi */
+  box-shadow:
+    0 8px 25px rgba(0,0,0,0.8),
+    inset 0 0 10px rgba(255,255,255,0.1);
+
+  /* glow chữ */
+  text-shadow:
+    0 0 5px rgba(0,0,0,0.8),
+    0 0 10px rgba(0,0,0,0.6);
 }
 
-/* 🔴 */
+/* 🔴 BÊN TRÁI */
 .red {
   left: 80px;
-  background: linear-gradient(135deg, #ff1a1a, #800000);
+
+  background: linear-gradient(135deg, #ff2a2a, #7a0000);
+
+  box-shadow:
+    0 0 15px rgba(255,0,0,0.6),
+    0 8px 25px rgba(0,0,0,0.8);
 }
 
-/* 🔵 */
+/* 🔵 BÊN PHẢI */
 .blue {
   right: 80px;
-  background: linear-gradient(135deg, #1a75ff, #002b80);
+
+  background: linear-gradient(135deg, #2a7bff, #001f7a);
+
+  box-shadow:
+    0 0 15px rgba(0,120,255,0.6),
+    0 8px 25px rgba(0,0,0,0.8);
 }
 
 /* PANEL */
