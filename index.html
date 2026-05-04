@@ -24,12 +24,10 @@ iframe {
 .overlay {
   position:fixed;
   top:15px;
-  left:0;
-  width:100%;
+  left:50%;
+  transform:translateX(-50%);
   display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:0 20px;
+  gap:30px; /* khoảng cách giữa 2 tên */
   z-index:10;
   pointer-events:none;
 }
@@ -51,20 +49,6 @@ iframe {
   border-radius:10px;
   color:#fff;
   font-weight:bold;
-  box-shadow:0 4px 10px rgba(0,0,0,0.5);
-}
-
-/* Tỉ số giữa */
-.score {
-  position:absolute;
-  left:50%;
-  transform:translateX(-50%);
-  background:#111;
-  padding:10px 25px;
-  border-radius:10px;
-  border:2px solid #fff;
-  font-size:20px;
-  color:#fff;
   box-shadow:0 4px 10px rgba(0,0,0,0.5);
 }
 
@@ -104,7 +88,6 @@ button {
 <!-- OVERLAY -->
 <div class="overlay">
   <div class="red" id="name1">Đỏ</div>
-  <div class="score" id="score">0 - 0</div>
   <div class="blue" id="name2">Xanh</div>
 </div>
 
@@ -115,29 +98,26 @@ button {
 <div class="panel" id="panel">
   <input id="input1" placeholder="Tên đỏ">
   <input id="input2" placeholder="Tên xanh">
-  <input id="scoreInput" placeholder="Tỉ số (vd 1-0)">
   <button onclick="update()">Cập nhật</button>
 </div>
 
 <script>
-// Ẩn panel khi dùng ?live=1
+// Ẩn panel khi live
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get("live") === "1") {
   document.getElementById("panel").style.display = "none";
 }
 
-// Load dữ liệu cũ
+// Load lại dữ liệu
 window.onload = () => {
   if(localStorage.name1) name1.innerText = localStorage.name1;
   if(localStorage.name2) name2.innerText = localStorage.name2;
-  if(localStorage.score) score.innerText = localStorage.score;
 };
 
-// Update realtime
+// Update tên
 function update() {
   const n1 = input1.value;
   const n2 = input2.value;
-  const sc = scoreInput.value;
 
   if(n1){
     name1.innerText = n1;
@@ -146,10 +126,6 @@ function update() {
   if(n2){
     name2.innerText = n2;
     localStorage.name2 = n2;
-  }
-  if(sc){
-    score.innerText = sc;
-    localStorage.score = sc;
   }
 }
 </script>
