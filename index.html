@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KĐQ Live Stream - Ultra Pro Overlay</title>
+    <title>KĐQ Live Stream - Ultra Pro Responsive Overlay</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * {
@@ -58,20 +58,15 @@
             will-change: transform;
         }
 
-    /* 🔥 Ô GIẢI ĐẤU - NHÍCH XUỐNG VÀ BO TRÒN ĐỀU CẢ 4 GÓC */
+        /* --- CẤU HÌNH TRÊN MÁY TÍNH (PC) --- */
         .tournament-box {
-            top: 10px; /* Nhích xuống 10px để không bị che mất góc bo phía trên */
+            top: 10px; 
             left: calc(50% - 175px); 
             width: 350px;
             background: linear-gradient(180deg, rgba(30, 30, 30, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%);
             padding: 10px 20px;
-            
-            /* Ép bo tròn đều cả 4 góc viên thuốc */
             border-radius: 20px; 
-            
-            /* Khép kín vòng viền vàng Gold (Đã bật lại viền trên) */
             border: 2px solid #D4AF37; 
-            
             color: #FFD700;
             font-weight: 800;
             font-size: 17px;
@@ -92,17 +87,20 @@
         .player {
             width: 220px;
             padding: 14px 20px;
-            border-radius: 15px; /* Bo tròn ô tên player đồng bộ luôn */
-            font-weight: 500;
+            border-radius: 15px;
+            font-weight: 700;
             font-size: 26px;
             color: #fff;
             text-align: center;
             backdrop-filter: blur(12px);
             border: 2px solid rgba(255,255,255,0.25);
             box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            
+            /* Logic tự co chữ/ngắt chữ của Player trên PC */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            word-break: break-word;
         }
 
         .red { background: linear-gradient(135deg, #e60000 0%, #800000 100%); }
@@ -139,6 +137,7 @@
 
         input:focus { border-color: #00c853; background: #222; }
         #inTour { width: 280px; border-color: #D4AF37; }
+        #inRed, #inBlue { width: 160px; }
 
         .btn {
             padding: 10px 25px;
@@ -171,11 +170,35 @@
             border: 1px solid rgba(255,255,255,0.2) !important;
         }
 
+        /* 🔥 ĐÃ FIX: ĐOẠN CODE DÀNH RIÊNG CHO ĐIỆN THOẠI (RESPONSIVE) */
         @media (max-width: 768px) {
-            .tournament-box { width: 200px; left: calc(50% - 100px); font-size: 12px; border-radius: 0 0 20px 20px; }
-            #dispRed { top: 60px; left: 10px; }
-            #dispBlue { top: 60px; left: auto; right: 10px; }
-            .player { width: 130px; font-size: 16px; padding: 8px; border-radius: 10px; }
+            /* Thu nhỏ ô giải đấu cho tinh tế */
+            .tournament-box { 
+                width: 180px; 
+                left: calc(50% - 90px); 
+                font-size: 11px; 
+                padding: 6px 10px; 
+                border-radius: 12px;
+                top: 5px;
+            }
+            
+            /* Tọa độ ban đầu mượt mà của 2 ô tên kì thủ */
+            #dispRed { top: 45px; left: 10px; }
+            #dispBlue { top: 45px; left: auto; right: 10px; }
+            
+            /* Ô chứa tên kì thủ: Thanh mảnh, không lo nuốt màn hình */
+            .player { 
+                width: 25vw; /* Chiếm tối đa 25% độ rộng màn hình điện thoại */
+                font-size: calc(10px + 0.5vw); /* Chữ tự động bóp nhỏ theo màn hình */
+                padding: 6px 8px; /* Thu hẹp khoảng đệm bên trong */
+                border-radius: 8px;
+                font-weight: 600;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+                border: 1.5px solid rgba(255,255,255,0.2);
+                white-space: normal; /* Cho phép rớt dòng nhẹ nếu tên quá dài */
+            }
+            
+            /* Bảng điều khiển ẩn hiện gọn gàng dưới đáy đt */
             .control-panel { flex-direction: column; width: 92%; bottom: 15px; padding: 15px; }
             #inTour, #inRed, #inBlue { width: 100%; }
         }
@@ -254,7 +277,7 @@
 
         document.addEventListener('keypress', (e) => { if (e.key === 'Enter') applyInfo(); });
 
-        // 🛠️ HỆ THỐNG KÉO THẢ CHỐNG DÍNH CHUỘT TUYỆT ĐỐI
+        // 🛠️ HỆ THỐNG KÉO THẢ CHỐNG DÍNH CHUỘT
         const draggables = document.querySelectorAll('.draggable');
         draggables.forEach(el => {
             let active = false;
