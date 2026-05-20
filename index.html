@@ -12,6 +12,9 @@
             margin: 0;
             padding: 0;
             -webkit-tap-highlight-color: transparent;
+            /* Chặn bôi đen text trên giao diện */
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         body, html {
@@ -103,6 +106,8 @@
             border-radius: 8px;
             outline: none;
             font-family: 'Montserrat', sans-serif;
+            -webkit-user-select: text; /* Vẫn cho phép gõ chữ vào ô input */
+            user-select: text;
         }
 
         input:focus {
@@ -188,8 +193,10 @@
     <button class="btn-action" id="fsBtn">FULL</button>
 
     <script>
-        // Giải mã chuỗi giấu link VDO
-        const secretDomain = atob("aHR0cHM6Ly92ZG8ubmluamEv");
+        // 🔐 LỚP 1: LINK LUỒNG ĐÃ ĐƯỢC MÃ HÓA CỨNG TOÀN BỘ SANG BASE64
+        // Chuỗi dưới đây khi giải mã ra chính xác là: https://vdo.ninja/?view=quocdang&cleanoutput&noaudio&buffer=0&buttons=0
+        const secureToken = atob("aHR0cHM6Ly92ZG8ubmluamEvP3ZpZXc9cXVvY2RhbmcmY2xlYW5vdXRwdXQmbm9hdWRpbyZidWZmZXI9MCZidXR0b25zPTA=");
+        
         const iframe = document.getElementById("stream-iframe");
         const panel = document.getElementById("panel");
         const btnFs = document.getElementById("fsBtn");
@@ -205,8 +212,8 @@
         elRed.innerText = initialRed;
         elBlue.innerText = initialBlue;
 
-        // Nạp link luồng gốc sạch sẽ
-        iframe.src = `${secretDomain}?view=quocdang&cleanoutput&noaudio&buffer=0&buttons=0`;
+        // Bơm luồng bảo mật vào hệ thống
+        iframe.src = secureToken;
 
         // Ẩn bảng nếu chạy qua link nhúng trực tiếp trên OBS
         if (params.get("live") === "1" || params.get("d") || params.get("x")) {
@@ -239,7 +246,7 @@
             try {
                 if (!document.fullscreenElement) {
                     await document.documentElement.requestFullscreen();
-                    btnFs.innerText = "✕"; // Thành dấu X tinh tế
+                    btnFs.innerText = "✕"; 
                     btnFs.classList.add("fs-active");
                     panel.style.opacity = "0";
                     panel.style.visibility = "hidden";
@@ -269,11 +276,42 @@
             if (e.key === 'Enter') { updateNames(); }
         });
 
-        // Khóa chuột phải bảo mật nhẹ
+        // 🔐 LỚP 2: HỆ THỐNG PHÁO ĐÀI KHÓA CHẶT CHUỘT PHẢI, F12 VÀ PHÍM TẮT ĐỌC CODE
+        
+        // Chặn Menu chuột phải hoàn toàn
         document.addEventListener('contextmenu', e => e.preventDefault());
+        
+        // Bắt và triệt hạ tất cả các tổ hợp phím tò mò
         document.onkeydown = function(e) {
-            if (e.keyCode == 123) return false;
-        }
+            // 1. Chặn phím F12 thần thánh
+            if (e.keyCode == 123) {
+                return false;
+            }
+            // 2. Chặn Ctrl + Shift + I (Mở DevTools trên Chrome/Windows)
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 73) {
+                return false;
+            }
+            // 3. Chặn Ctrl + Shift + J (Mở Console)
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 74) {
+                return false;
+            }
+            // 4. Chặn Ctrl + Shift + C (Chế độ soi phần tử Element)
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 67) {
+                return false;
+            }
+            // 5. Chặn Ctrl + U (Xem mã nguồn gốc View-Source)
+            if (e.ctrlKey && e.keyCode == 85) {
+                return false;
+            }
+            // 6. Chặn Cmd + Option + I (Hệ máy Macbook/Safari/Chrome)
+            if (e.metaKey && e.altKey && e.keyCode == 73) {
+                return false;
+            }
+            // 7. Chặn Cmd + U (Xem nguồn trên Mac)
+            if (e.metaKey && e.keyCode == 85) {
+                return false;
+            }
+        };
     </script>
 </body>
 </html>
