@@ -96,7 +96,7 @@
             gap: 10px;
             z-index: 20;
             border: 1px solid rgba(255,255,255,0.1);
-            transition: opacity 0.5s ease;
+            transition: opacity 0.3s ease, visibility 0.3s ease; /* Thêm hiệu ứng ẩn mượt */
         }
 
         input {
@@ -129,8 +129,19 @@
             transform: scale(1.05);
         }
 
+        /* Nút FULL nổi hẳn ra độc lập khi ẩn panel */
         #fsBtn {
             background: #4D80F5;
+            position: relative;
+            z-index: 25;
+        }
+
+        /* Style riêng khi nút FULL bị tách ra đứng một mình góc dưới màn hình */
+        .fs-isolated {
+            position: fixed !important;
+            bottom: 25px;
+            left: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
         /* --- THANH ĐIỀU KHIỂN ZOOM DỌC --- */
@@ -226,8 +237,9 @@
         <input id="input1" placeholder="Tên Đỏ (Tiên)">
         <input id="input2" placeholder="Tên Xanh (Hậu)">
         <button class="btn-action" onclick="updateNames()">Cập nhật ngay</button>
-        <button class="btn-action" id="fsBtn">FULL</button>
     </div>
+
+    <button class="btn-action fs-isolated" id="fsBtn">FULL</button>
 
     <div id="zoom-control-box">
         <button class="zoom-btn" onclick="changeZoomBtn(1)">+</button>
@@ -236,10 +248,11 @@
     </div>
 
     <script>
-        // 🕵️‍♂️ GIẤU LINK: Mã hóa Base64 tên miền VDO
         const secretDomain = atob("aHR0cHM6Ly92ZG8ubmluamEv");
         const iframe = document.getElementById("stream-iframe");
         const zoomBox = document.getElementById("zoom-control-box");
+        const panel = document.getElementById("panel");
+        const btnFs = document.getElementById("fsBtn");
 
         // Khởi tạo dữ liệu từ URL
         const params = new URLSearchParams(window.location.search);
@@ -248,18 +261,18 @@
 
         const elRed = document.getElementById("name1");
         const elBlue = document.getElementById("name2");
-        const panel = document.getElementById("panel");
 
         elRed.innerText = initialRed;
         elBlue.innerText = initialBlue;
 
-        // Nạp link luồng và gài biến zoom hệ thống phần cứng ẩn
+        // Nạp link luồng
         iframe.src = `${secretDomain}?view=quocdang&cleanoutput&noaudio&buffer=0&zoom&control&buttons=0`;
 
-        // Ẩn bảng điều khiển nếu có tham số live
+        // Ẩn bảng điều khiển vĩnh viễn nếu chạy link OBS nhúng trực tiếp
         if (params.get("live") === "1" || params.get("d") || params.get("x")) {
             panel.style.opacity = "0";
-            setTimeout(() => { panel.style.display = "none"; }, 500);
+            panel.style.visibility = "hidden";
+            btnFs.style.display = "none"; // OBS Source thì không cần nút Full
             zoomBox.style.display = "flex";
         } else {
             zoomBox.style.display = "flex";
@@ -284,12 +297,10 @@
             }, 2000);
         }
 
-        // ĐIỀU KHIỂN ZOOM HYBRID (2 TẦNG BẢO HIỂM)
+        // ĐIỀU KHIỂN ZOOM HYBRID
         function applyHybridZoom(inputValue) {
             const zoomRatio = parseFloat(inputValue) / 100;
-            // Tầng 1: Zoom giao diện tại chỗ bằng CSS
             iframe.style.transform = `scale(${zoomRatio})`;
-            // Tầng 2: Bắn lệnh phần cứng cho VDO hệ thống nhận
             try {
                 iframe.contentWindow.postMessage({ "zoom": parseInt(inputValue) }, '*');
             } catch (e) {
@@ -306,21 +317,38 @@
             applyHybridZoom(newValue);
         }
 
-        // XỬ LÝ SỰ KIỆN FULLSCREEN CHUẨN (ĐÃ ĐƯỢC ĐƯA XUỐNG DƯỚI ĐỂ CHẠY CHÍNH XÁC)
-        const btnFs = document.getElementById("fsBtn");
+        // 🔥 LOGIC MỚI: Bấm FULL là giấu sạch ô nhập liệu
         btnFs.addEventListener("click", async () => {
             try {
                 if (!document.fullscreenElement) {
                     await document.documentElement.requestFullscreen();
                     btnFs.innerText = "EXIT";
                     btnFs.style.background = "#f44336";
+                    
+                    // Ẩn mượt mà bảng nhập liệu đi
+                    panel.style.opacity = "0";
+                    panel.style.visibility = "hidden";
                 } else {
                     await document.exitFullscreen();
                     btnFs.innerText = "FULL";
                     btnFs.style.background = "#4D80F5";
+                    
+                    // Hiện lại bảng nhập liệu khi thoát toàn màn hình
+                    panel.style.opacity = "1";
+                    panel.style.visibility = "visible";
                 }
             } catch(e) {
                 console.log("Lỗi kích hoạt toàn màn hình:", e);
+            }
+        });
+
+        // Lắng nghe sự kiện nếu người dùng bấm nút Esc hoặc vuốt màn hình để thoát Fullscreen tự do
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                btnFs.innerText = "FULL";
+                btnFs.style.background = "#4D80F5";
+                panel.style.opacity = "1";
+                panel.style.visibility = "visible";
             }
         });
 
@@ -328,7 +356,7 @@
             if (e.key === 'Enter') { updateNames(); }
         });
 
-        // Bảo mật chặn F12 tò mò mã nguồn
+        // Bảo mật chặn F12
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.onkeydown = function(e) {
             if (e.keyCode == 123) return false;
