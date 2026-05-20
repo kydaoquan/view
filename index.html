@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KĐQ Live Stream - Anti-Break Radius Overlay</title>
+    <title>KĐQ Live Stream - Fixed Absolute Overlay</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * {
@@ -50,11 +50,12 @@
             pointer-events: none;
         }
 
+        /* DÙNG TRANSITION VÀ CỐ ĐỊNH BAN ĐẦU */
         .wrapper-box {
             position: absolute !important;
             pointer-events: auto !important;
             touch-action: none;
-            will-change: transform, width;
+            will-change: transform;
             padding: 0;
             display: flex;
             flex-direction: column;
@@ -82,7 +83,6 @@
             word-break: break-word;
         }
 
-        /* 🔥 ĐÃ FIX: CHỐNG VỠ KHUNG KHI XUỐNG DÒNG */
         .player {
             border-radius: 15px;
             font-weight: 700;
@@ -91,18 +91,14 @@
             backdrop-filter: blur(12px);
             border: 2px solid rgba(255,255,255,0.25);
             box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-            
-            /* Dùng hệ thống co giãn linh hoạt theo chiều dọc */
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
             cursor: move;
             width: 100%;
-            min-height: 100%; /* Đảm bảo phủ kín khung */
+            min-height: 100%;
             padding: 5px 15px;
-            
-            /* Cấu hình cho phép ngắt dòng thông minh */
             white-space: normal; 
             word-break: break-word; 
             overflow: visible; 
@@ -112,14 +108,14 @@
         .blue { background: linear-gradient(135deg, #0055ff 0%, #002266 100%); }
 
         .resizer {
-            width: 14px;
-            height: 14px;
+            width: 16px;
+            height: 16px;
             background: #fff;
             border: 2px solid #333;
             border-radius: 50%;
             position: absolute;
-            right: -4px;
-            bottom: -4px;
+            right: -6px;
+            bottom: -6px;
             cursor: nwse-resize;
             z-index: 20;
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
@@ -127,10 +123,10 @@
         
         .tournament-box + .resizer { background: #FFD700; }
 
-        /* VỊ TRÍ MẶC ĐỊNH PC */
-        #wrapTour { top: 10px; left: calc(50% - 175px); width: 350px; min-height: 50px; }
-        #wrapRed { top: 75px; left: 80px; width: 220px; min-height: 60px; }
-        #wrapBlue { top: 75px; right: 80px; width: 220px; min-height: 60px; }
+        /* VỊ TRÍ GỐC SET SẴN TRÊN TỌA ĐỘ TUYỆT ĐỐI */
+        #wrapTour { top: 0; left: 0; width: 350px; min-height: 50px; }
+        #wrapRed { top: 0; left: 0; width: 220px; min-height: 60px; }
+        #wrapBlue { top: 0; left: 0; width: 220px; min-height: 60px; }
 
         /* PANEL ĐIỀU KHIỂN */
         .control-panel {
@@ -196,11 +192,9 @@
             border: 1px solid rgba(255,255,255,0.2) !important;
         }
 
-        /* MOBILE STYLES */
         @media (max-width: 768px) {
             .control-panel { flex-direction: column; width: 92%; bottom: 15px; padding: 15px; }
             #inTour, #inRed, #inBlue { width: 100%; }
-            .resizer { width: 16px; height: 16px; right: -6px; bottom: -6px; }
         }
     </style>
 </head>
@@ -242,6 +236,20 @@
         const panel = document.getElementById("panel");
         const btnFs = document.getElementById("fsBtn");
 
+        // Quản lý dữ liệu vị trí bằng Object độc lập để không phụ thuộc vào CSS của trình duyệt
+        const state = {
+            wrapTour: { x: window.innerWidth/2 - 175, y: 10, w: 350, h: 50 },
+            wrapRed: { x: 80, y: 75, w: 220, h: 60 },
+            wrapBlue: { x: window.innerWidth - 300, y: 75, w: 220, h: 60 }
+        };
+
+        // Chỉnh vị trí mặc định mượt hơn cho Mobile ngay từ đầu
+        if (window.innerWidth <= 768) {
+            state.wrapTour = { x: window.innerWidth/2 - 90, y: 5, w: 180, h: 32 };
+            state.wrapRed = { x: 10, y: 45, w: 110, h: 35 };
+            state.wrapBlue = { x: window.innerWidth - 120, y: 45, w: 110, h: 35 };
+        }
+
         const u = new URLSearchParams(window.location.search);
         const hasTour = u.get("g");
         const hasRed = u.get("d");
@@ -260,40 +268,43 @@
             document.querySelectorAll('.resizer').forEach(r => r.style.display = 'none');
         }
 
-        // KHÔI PHỤC VỊ TRÍ VÀ KÍCH THƯỚC
+        // Đọc tọa độ từ URL nếu có sẵn
         if (posData) {
             try {
-                const positions = JSON.parse(decodeURIComponent(posData));
-                Object.keys(positions).forEach(id => {
-                    const box = document.getElementById(id);
-                    if (box) {
-                        box.style.left = positions[id].left;
-                        box.style.top = positions[id].top;
-                        box.style.width = positions[id].width;
-                        if(positions[id].height) box.style.minHeight = positions[id].height;
-                        box.style.right = 'auto';
+                const parsed = JSON.parse(decodeURIComponent(posData));
+                Object.keys(parsed).forEach(id => {
+                    if (state[id]) {
+                        state[id].x = parsed[id].x;
+                        state[id].y = parsed[id].y;
+                        state[id].w = parsed[id].w;
+                        state[id].h = parsed[id].h;
                     }
                 });
-            } catch(e) { console.log("Lỗi đọc tọa độ"); }
-        } else {
-            if (window.innerWidth <= 768) {
-                const t = document.getElementById("wrapTour"); t.style.width="180px"; t.style.minHeight="32px"; t.style.left="calc(50% - 90px)"; t.style.top="5px";
-                const r = document.getElementById("wrapRed"); r.style.top="45px"; r.style.left="10px"; r.style.width="110px"; r.style.minHeight="35px";
-                const b = document.getElementById("wrapBlue"); b.style.top="45px"; b.style.right="10px"; b.style.left="auto"; b.style.width="110px"; b.style.minHeight="35px";
-            }
+            } catch(e) { console.log("Lỗi đọc vị trí"); }
         }
 
-        // TỰ CO GIÃN FONT CHỮ DỰA TRÊN CHIỀU CAO THỰC TẾ CỦA KHUNG
+        // Hàm dựng vẽ vị trí siêu chuẩn bằng Translate đồ họa phần cứng
+        function renderBox(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.style.transform = `translate3d(${state[id].x}px, ${state[id].y}px, 0)`;
+            el.style.width = state[id].w + 'px';
+            el.style.minHeight = state[id].h + 'px';
+            autoFitText(el);
+        }
+
+        function renderAll() {
+            Object.keys(state).forEach(id => renderBox(id));
+        }
+
         function autoFitText(box) {
             const innerTextNode = box.querySelector('.player, .tournament-box');
             if(!innerTextNode) return;
-            
-            let currentHeight = box.clientHeight;
-            let calculatedFont = Math.floor(currentHeight * 0.42); // Tính size chữ vừa vặn theo chiều cao ô
+            let currentHeight = box.clientHeight || state[box.id].h;
+            let calculatedFont = Math.floor(currentHeight * 0.42);
             innerTextNode.style.fontSize = calculatedFont + "px";
 
-            // Nếu chữ quá dài càn quét hết chiều ngang khung, tự động bóp nhỏ font tiếp chứ không đẩy méo góc bo tròn
-            let maxLoop = 50;
+            let maxLoop = 40;
             while ((innerTextNode.scrollHeight > box.clientHeight || innerTextNode.scrollWidth > box.clientWidth) && calculatedFont > 9 && maxLoop > 0) {
                 calculatedFont--;
                 innerTextNode.style.fontSize = calculatedFont + "px";
@@ -301,40 +312,24 @@
             }
         }
 
-        function adjustAll() {
-            document.querySelectorAll('.wrapper-box').forEach(box => autoFitText(box));
-        }
-
         function applyInfo() {
             document.getElementById("dispTour").innerText = document.getElementById("inTour").value.trim() || "GIẢI ĐẤU CỜ TƯỚNG";
             document.getElementById("dispRed").innerText = document.getElementById("inRed").value.trim() || "TIÊN";
             document.getElementById("dispBlue").innerText = document.getElementById("inBlue").value.trim() || "HẬU";
             
-            // Chạy fit chữ trước khi lấy tọa độ
-            adjustAll();
-            
-            // Gom dữ liệu vị trí đóng gói lên URL
-            const positions = {};
-            document.querySelectorAll('.wrapper-box').forEach(box => {
-                positions[box.id] = {
-                    left: box.style.left,
-                    top: box.style.top,
-                    width: box.style.width,
-                    height: box.clientHeight + 'px' // Lấy chiều cao thực tế chính xác
-                };
-            });
+            renderAll();
 
             const tourStr = encodeURIComponent(document.getElementById("dispTour").innerText);
             const redStr = encodeURIComponent(document.getElementById("dispRed").innerText);
             const blueStr = encodeURIComponent(document.getElementById("dispBlue").innerText);
-            const posStr = encodeURIComponent(JSON.stringify(positions));
+            const posStr = encodeURIComponent(JSON.stringify(state));
 
             const newU = `?g=${tourStr}&d=${redStr}&x=${blueStr}&pos=${posStr}`;
             window.history.pushState({}, '', newU);
         }
 
-        window.addEventListener('load', () => { setTimeout(adjustAll, 200); });
-        window.addEventListener('resize', adjustAll);
+        window.addEventListener('load', () => { renderAll(); setTimeout(renderAll, 300); });
+        window.addEventListener('resize', () => { renderAll(); });
 
         btnFs.addEventListener("click", async () => {
             if (!document.fullscreenElement) {
@@ -353,50 +348,49 @@
                 panel.style.opacity = "1";
                 panel.style.visibility = "visible";
             }
-            setTimeout(adjustAll, 150);
+            setTimeout(renderAll, 150);
         });
 
         document.addEventListener('keypress', (e) => { if (e.key === 'Enter') applyInfo(); });
 
-        // HỆ THỐNG KÉO THẢ VÀ BIẾN ĐỔI KÍCH THƯỚC ULTRA SMOOTH
-        const boxes = document.querySelectorAll('.wrapper-box');
-        let activeBox = null, isDragging = false, isResizing = false;
-        let startX, startY, initialLeft, initialTop, initialWidth, initialHeight;
-        let nextLeft, nextTop, nextWidth, nextHeight, ticking = false;
+        // 🔥 CƠ CHẾ KÉO THẢ TỌA ĐỘ THUẦN - BẤT KHẢ XÂM PHẠM, KHÔNG NHẢY VỊ TRÍ
+        let activeId = null, isDragging = false, isResizing = false;
+        let startX, startY;
+        let baseX, baseY, baseW, baseH;
+        let ticking = false;
 
-        function updateElementTransform() {
-            if (!activeBox) { ticking = false; return; }
-            if (isDragging) {
-                activeBox.style.left = nextLeft + 'px';
-                activeBox.style.top = nextTop + 'px';
-            } else if (isResizing) {
-                activeBox.style.width = nextWidth + 'px';
-                activeBox.style.minHeight = nextHeight + 'px'; // Đồng bộ kéo zoom theo chiều dọc linh hoạt
-                autoFitText(activeBox);
-            }
+        function updateTransform() {
+            if (!activeId) { ticking = false; return; }
+            renderBox(activeId);
             ticking = false;
-        }
-
-        function requestTick() {
-            if (!ticking) { requestAnimationFrame(updateElementTransform); ticking = true; }
         }
 
         const onStart = (e) => {
             const box = e.target.closest('.wrapper-box');
             if (!box) return;
-            activeBox = box;
+
+            activeId = box.id;
             const resizer = box.querySelector('.resizer');
 
             const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
             const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
-            startX = clientX; startY = clientY;
             
-            const rect = box.getBoundingClientRect();
-            box.style.left = rect.left + 'px'; box.style.top = rect.top + 'px'; box.style.right = 'auto';
-            initialLeft = rect.left; initialTop = rect.top; initialWidth = rect.width; initialHeight = rect.height;
+            startX = clientX;
+            startY = clientY;
 
-            if (e.target === resizer) { isResizing = true; isDragging = false; } 
-            else { isDragging = true; isResizing = false; }
+            // Lấy trực tiếp thông số từ bộ nhớ cache object của hệ thống, không sợ lag trình duyệt
+            baseX = state[activeId].x;
+            baseY = state[activeId].y;
+            baseW = state[activeId].w;
+            baseH = state[activeId].h;
+
+            if (e.target === resizer) {
+                isResizing = true;
+                isDragging = false;
+            } else {
+                isDragging = true;
+                isResizing = false;
+            }
         };
 
         const onMove = (e) => {
@@ -405,19 +399,29 @@
 
             const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
             const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
-            const dx = clientX - startX, dy = clientY - startY;
+            
+            const dx = clientX - startX;
+            const dy = clientY - startY;
 
             if (isDragging) {
-                nextLeft = initialLeft + dx;
-                nextTop = initialTop + dy;
+                state[activeId].x = baseX + dx;
+                state[activeId].y = baseY + dy;
             } else if (isResizing) {
-                nextWidth = Math.max(70, initialWidth + dx);
-                nextHeight = Math.max(25, initialHeight + dy);
+                state[activeId].w = Math.max(70, baseW + dx);
+                state[activeId].h = Math.max(25, baseH + dy);
             }
-            requestTick();
+
+            if (!ticking) {
+                requestAnimationFrame(updateTransform);
+                ticking = true;
+            }
         };
 
-        const onEnd = () => { isDragging = false; isResizing = false; activeBox = null; };
+        const onEnd = () => {
+            isDragging = false;
+            isResizing = false;
+            activeId = null;
+        };
 
         window.addEventListener('mousedown', onStart);
         window.addEventListener('mousemove', onMove, { passive: false });
