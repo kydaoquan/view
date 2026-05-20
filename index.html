@@ -22,18 +22,17 @@
         }
         iframe { width: 100%; height: 100%; border: none; }
 
-        /* FOOTER BANNER - Kéo dài hết chiều rộng */
+        /* FOOTER BANNER */
         .footer-banner {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 60px; /* Độ cao tùy chỉnh theo ảnh của mày */
-            background-image: url('https://i.postimg.cc/3Nm0J7Xc/footerok.jpg'); /* Thay URL ảnh của mày vào đây */
+            height: 80px; /* Tăng chút cho hình hiển thị rõ */
+            background-image: url('https://i.postimg.cc/3Nm0J7Xc/footerok.jpg');
             background-size: cover;
             background-position: center;
             z-index: 5;
-            opacity: 0.9;
         }
 
         /* OVERLAY TÊN PLAYER */
@@ -63,10 +62,10 @@
         .red { background: linear-gradient(135deg, rgba(255, 60, 60, 0.8), rgba(150, 0, 0, 0.8)); }
         .blue { background: linear-gradient(135deg, rgba(60, 150, 255, 0.8), rgba(0, 50, 150, 0.8)); }
 
-        /* TÊN GIẢI ĐẤU - Vàng nhẹ */
+        /* TÊN GIẢI ĐẤU */
         #tournament-display {
             position: fixed;
-            bottom: 80px; /* Nâng cao lên một chút so với cũ để không đè lên footer */
+            bottom: 100px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
@@ -83,7 +82,7 @@
 
         .panel {
             position: fixed;
-            bottom: 120px; left: 10px; right: 10px;
+            bottom: 150px; left: 10px; right: 10px;
             background: rgba(20, 20, 20, 0.95);
             padding: 15px;
             border-radius: 12px;
@@ -104,7 +103,6 @@
         <iframe id="stream-iframe" src="" allow="camera *; microphone *; autoplay *; fullscreen *" allowfullscreen></iframe>
     </div>
 
-    <!-- Banner chân trang -->
     <div class="footer-banner"></div>
 
     <div class="overlay">
@@ -124,7 +122,6 @@
     </div>
 
     <script>
-        // ... giữ nguyên code JavaScript cũ ...
         const secretDomain = atob("aHR0cHM6Ly92ZG8ubmluamEv");
         const iframe = document.getElementById("stream-iframe");
         iframe.src = `${secretDomain}?view=quocdang&cleanoutput&noaudio&buffer=0`;
