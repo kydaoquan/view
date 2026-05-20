@@ -2,46 +2,46 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KĐQ Live Stream - Pro Overlay</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
- <button id="fsBtn">FULL</button>
-
-<script>
-const btn = document.getElementById("fsBtn");
-
-btn.addEventListener("click", async () => {
-  try {
-    await document.documentElement.requestFullscreen();
-  } catch(e) {
-    console.log(e);
-  }
-});
-</script>
     <style>
         /* Reset cơ bản để tránh tràn màn hình */
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
             -webkit-tap-highlight-color: transparent;
         }
 
-        body {
+        body, html {
             margin: 0;
             background: #000;
             font-family: 'Montserrat', sans-serif;
             overflow: hidden; /* Không cho cuộn trang */
+            width: 100%;
             height: 100vh;
         }
 
-        /* VIDEO - Full màn hình */
-        iframe {
+        /* KHUNG BỌC IFRAME ĐỂ ZOOM MƯỢT MÀ */
+        #iframe-wrapper {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            border: none;
             z-index: 1;
+            overflow: hidden;
+            background: #000;
+        }
+
+        /* VIDEO - Full màn hình */
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            transition: transform 0.15s ease-out; /* Tạo độ mượt khi gạt zoom */
+            transform-origin: center center;
         }
 
         /* OVERLAY - Chứa tên Player */
@@ -113,7 +113,7 @@ btn.addEventListener("click", async () => {
             border-color: #00c853;
         }
 
-        button {
+        .btn-action {
             padding: 10px 20px;
             border: none;
             border-radius: 8px;
@@ -124,9 +124,70 @@ btn.addEventListener("click", async () => {
             transition: 0.2s;
         }
 
-        button:hover {
+        .btn-action:hover {
             background: #00e676;
             transform: scale(1.05);
+        }
+
+        #fsBtn {
+            background: #4D80F5;
+        }
+
+        /* --- THANH ĐIỀU KHIỂN ZOOM DỌC --- */
+        #zoom-control-box {
+            position: fixed;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 220px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 25px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+            z-index: 20;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+
+        .zoom-btn {
+            color: #ffffff;
+            font-size: 22px;
+            font-weight: bold;
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .zoom-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 120px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            transform: rotate(-90deg);
+            margin: 45px 0;
+            outline: none;
+        }
+
+        .zoom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4D80F5;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(77, 128, 245, 0.8);
         }
 
         /* MOBILE OPTIMIZATION */
@@ -144,35 +205,47 @@ btn.addEventListener("click", async () => {
                 flex-direction: column;
                 width: 85%;
             }
+            #zoom-control-box {
+                right: 12px;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- VIDEO LUỒNG CHÍNH -->
-    <iframe src="https://vdo.ninja/?view=quocdang&cleanoutput&noaudio&buffer=0"></iframe>
+    <div id="iframe-wrapper">
+        <iframe id="stream-iframe" src="" allow="camera *; microphone *; autoplay *; fullscreen *" allowfullscreen></iframe>
+    </div>
 
-    <!-- LỚP PHỦ THÔNG TIN -->
     <div class="overlay">
         <div class="player red" id="name1">Tiên</div>
         <div class="player blue" id="name2">Hậu</div>
     </div>
 
-    <!-- BẢNG ĐIỀU KHIỂN -->
     <div class="panel" id="panel">
         <input id="input1" placeholder="Tên Đỏ (Tiên)">
         <input id="input2" placeholder="Tên Xanh (Hậu)">
-        <button onclick="updateNames()">Cập nhật ngay</button>
+        <button class="btn-action" onclick="updateNames()">Cập nhật ngay</button>
+        <button class="btn-action" id="fsBtn">FULL</button>
+    </div>
+
+    <div id="zoom-control-box">
+        <button class="zoom-btn" onclick="changeZoomBtn(1)">+</button>
+        <input type="range" id="zoom-slider" class="zoom-slider" min="100" max="300" step="5" value="100" oninput="applyHybridZoom(this.value)">
+        <button class="zoom-btn" onclick="changeZoomBtn(-1)">-</button>
     </div>
 
     <script>
-        // 1. Khởi tạo dữ liệu từ URL
+        // 🕵️‍♂️ GIẤU LINK: Mã hóa Base64 tên miền VDO
+        const secretDomain = atob("aHR0cHM6Ly92ZG8ubmluamEv");
+        const iframe = document.getElementById("stream-iframe");
+        const zoomBox = document.getElementById("zoom-control-box");
+
+        // Khởi tạo dữ liệu từ URL
         const params = new URLSearchParams(window.location.search);
-        
         const initialRed = params.get("d") || "Tiên";
         const initialBlue = params.get("x") || "Hậu";
 
-        // Gán tên ban đầu
         const elRed = document.getElementById("name1");
         const elBlue = document.getElementById("name2");
         const panel = document.getElementById("panel");
@@ -180,42 +253,86 @@ btn.addEventListener("click", async () => {
         elRed.innerText = initialRed;
         elBlue.innerText = initialBlue;
 
-        // 2. Ẩn panel nếu đang Live hoặc đã có tham số (Dùng cho OBS Browser Source)
+        // Nạp link luồng và gài biến zoom hệ thống phần cứng ẩn
+        iframe.src = `${secretDomain}?view=quocdang&cleanoutput&noaudio&buffer=0&zoom&control&buttons=0`;
+
+        // Ẩn bảng điều khiển nếu có tham số live
         if (params.get("live") === "1" || params.get("d") || params.get("x")) {
             panel.style.opacity = "0";
-            // Đợi mờ dần rồi ẩn hẳn để không chặn click
             setTimeout(() => { panel.style.display = "none"; }, 500);
+            zoomBox.style.display = "flex";
+        } else {
+            zoomBox.style.display = "flex";
         }
 
-        // 3. Hàm cập nhật KHÔNG reload trang
         function updateNames() {
             const n1 = document.getElementById("input1").value.trim() || "Tiên";
             const n2 = document.getElementById("input2").value.trim() || "Hậu";
 
-            // Cập nhật text ngay lập tức
             elRed.innerText = n1;
             elBlue.innerText = n2;
 
-            // Cập nhật URL thầm lặng (không reload iframe)
             const newURL = `?d=${encodeURIComponent(n1)}&x=${encodeURIComponent(n2)}`;
             window.history.pushState({}, '', newURL);
 
-            // Hiệu ứng phản hồi nhẹ
-            const btn = document.querySelector('button');
-            btn.innerText = "Đã lưu!";
-            btn.style.background = "#2196F3";
+            const btnUpdate = document.querySelector('.panel button');
+            btnUpdate.innerText = "Đã lưu!";
+            btnUpdate.style.background = "#2196F3";
             setTimeout(() => {
-                btn.innerText = "Cập nhật ngay";
-                btn.style.background = "#00c853";
+                btnUpdate.innerText = "Cập nhật ngay";
+                btnUpdate.style.background = "#00c853";
             }, 2000);
         }
 
-        // Nhấn Enter để cập nhật cho nhanh
-        document.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                updateNames();
+        // ĐIỀU KHIỂN ZOOM HYBRID (2 TẦNG BẢO HIỂM)
+        function applyHybridZoom(inputValue) {
+            const zoomRatio = parseFloat(inputValue) / 100;
+            // Tầng 1: Zoom giao diện tại chỗ bằng CSS
+            iframe.style.transform = `scale(${zoomRatio})`;
+            // Tầng 2: Bắn lệnh phần cứng cho VDO hệ thống nhận
+            try {
+                iframe.contentWindow.postMessage({ "zoom": parseInt(inputValue) }, '*');
+            } catch (e) {
+                console.log("Lỗi lệnh zoom:", e);
+            }
+        }
+
+        function changeZoomBtn(direction) {
+            const slider = document.getElementById('zoom-slider');
+            let newValue = parseInt(slider.value) + (direction * 20);
+            if (newValue < 100) newValue = 100;
+            if (newValue > 300) newValue = 300;
+            slider.value = newValue;
+            applyHybridZoom(newValue);
+        }
+
+        // XỬ LÝ SỰ KIỆN FULLSCREEN CHUẨN (ĐÃ ĐƯỢC ĐƯA XUỐNG DƯỚI ĐỂ CHẠY CHÍNH XÁC)
+        const btnFs = document.getElementById("fsBtn");
+        btnFs.addEventListener("click", async () => {
+            try {
+                if (!document.fullscreenElement) {
+                    await document.documentElement.requestFullscreen();
+                    btnFs.innerText = "EXIT";
+                    btnFs.style.background = "#f44336";
+                } else {
+                    await document.exitFullscreen();
+                    btnFs.innerText = "FULL";
+                    btnFs.style.background = "#4D80F5";
+                }
+            } catch(e) {
+                console.log("Lỗi kích hoạt toàn màn hình:", e);
             }
         });
+
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') { updateNames(); }
+        });
+
+        // Bảo mật chặn F12 tò mò mã nguồn
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123) return false;
+        }
     </script>
 </body>
 </html>
