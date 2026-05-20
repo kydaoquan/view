@@ -18,12 +18,12 @@
             margin: 0;
             background: #000;
             font-family: 'Montserrat', sans-serif;
-            overflow: hidden; /* Không cho cuộn trang */
+            overflow: hidden;
             width: 100%;
             height: 100vh;
         }
 
-        /* KHUNG BỌC IFRAME ĐỂ ZOOM MƯỢT MÀ */
+        /* KHUNG BỌC IFRAME */
         #iframe-wrapper {
             position: fixed;
             top: 0;
@@ -40,14 +40,12 @@
             width: 100%;
             height: 100%;
             border: none;
-            transition: transform 0.15s ease-out; /* Tạo độ mượt khi gạt zoom */
-            transform-origin: center center;
         }
 
         /* OVERLAY - Chứa tên Player */
         .overlay {
             position: fixed;
-            top: 80px; /* Cách top xa hơn xíu cho thoáng */
+            top: 80px;
             left: 0;
             width: 100%;
             z-index: 10;
@@ -71,13 +69,11 @@
             transition: all 0.3s ease;
         }
 
-        /* Phe Đỏ (Tiên) */
         .red {
             background: linear-gradient(135deg, rgba(255, 42, 42, 0.9), rgba(122, 0, 0, 0.9));
             box-shadow: 0 0 20px rgba(255, 0, 0, 0.4), 0 8px 25px rgba(0,0,0,0.6);
         }
 
-        /* Phe Xanh (Hậu) */
         .blue {
             background: linear-gradient(135deg, rgba(42, 123, 255, 0.9), rgba(0, 31, 122, 0.9));
             box-shadow: 0 0 20px rgba(0, 120, 255, 0.4), 0 8px 25px rgba(0,0,0,0.6);
@@ -96,7 +92,7 @@
             gap: 10px;
             z-index: 20;
             border: 1px solid rgba(255,255,255,0.1);
-            transition: opacity 0.3s ease, visibility 0.3s ease; /* Thêm hiệu ứng ẩn mượt */
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
 
         input {
@@ -129,76 +125,29 @@
             transform: scale(1.05);
         }
 
-        /* Nút FULL nổi hẳn ra độc lập khi ẩn panel */
+        /* NÚT FULL ĐỘC LẬP */
         #fsBtn {
             background: #4D80F5;
-            position: relative;
-            z-index: 25;
-        }
-
-        /* Style riêng khi nút FULL bị tách ra đứng một mình góc dưới màn hình */
-        .fs-isolated {
             position: fixed !important;
             bottom: 25px;
             left: 24px;
+            z-index: 25;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            min-width: 70px;
+            text-align: center;
         }
 
-        /* --- THANH ĐIỀU KHIỂN ZOOM DỌC --- */
-        #zoom-control-box {
-            position: fixed;
-            right: 24px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 50px;
-            height: 220px;
-            background-color: rgba(0, 0, 0, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 25px;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px 0;
-            z-index: 20;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-        }
-
-        .zoom-btn {
-            color: #ffffff;
-            font-size: 22px;
-            font-weight: bold;
-            background: none;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-            height: 35px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .zoom-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 120px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 2px;
-            transform: rotate(-90deg);
-            margin: 45px 0;
-            outline: none;
-        }
-
-        .zoom-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #4D80F5;
-            cursor: pointer;
-            box-shadow: 0 0 8px rgba(77, 128, 245, 0.8);
+        /* Khi đã full màn hình, biến thành nút X nhỏ gọn ở góc */
+        .fs-active {
+            background: rgba(0, 0, 0, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            color: rgba(255, 255, 255, 0.6) !important;
+            bottom: 15px !important;
+            left: 15px !important;
+            padding: 6px 12px !important;
+            font-size: 14px !important;
+            min-width: auto !important;
+            border-radius: 6px !important;
         }
 
         /* MOBILE OPTIMIZATION */
@@ -215,9 +164,6 @@
             .panel {
                 flex-direction: column;
                 width: 85%;
-            }
-            #zoom-control-box {
-                right: 12px;
             }
         }
     </style>
@@ -239,18 +185,12 @@
         <button class="btn-action" onclick="updateNames()">Cập nhật ngay</button>
     </div>
 
-    <button class="btn-action fs-isolated" id="fsBtn">FULL</button>
-
-    <div id="zoom-control-box">
-        <button class="zoom-btn" onclick="changeZoomBtn(1)">+</button>
-        <input type="range" id="zoom-slider" class="zoom-slider" min="100" max="300" step="5" value="100" oninput="applyHybridZoom(this.value)">
-        <button class="zoom-btn" onclick="changeZoomBtn(-1)">-</button>
-    </div>
+    <button class="btn-action" id="fsBtn">FULL</button>
 
     <script>
+        // Giải mã chuỗi giấu link VDO
         const secretDomain = atob("aHR0cHM6Ly92ZG8ubmluamEv");
         const iframe = document.getElementById("stream-iframe");
-        const zoomBox = document.getElementById("zoom-control-box");
         const panel = document.getElementById("panel");
         const btnFs = document.getElementById("fsBtn");
 
@@ -265,17 +205,14 @@
         elRed.innerText = initialRed;
         elBlue.innerText = initialBlue;
 
-        // Nạp link luồng
-        iframe.src = `${secretDomain}?view=quocdang&cleanoutput&noaudio&buffer=0&zoom&control&buttons=0`;
+        // Nạp link luồng gốc sạch sẽ
+        iframe.src = `${secretDomain}?view=quocdang&cleanoutput&noaudio&buffer=0&buttons=0`;
 
-        // Ẩn bảng điều khiển vĩnh viễn nếu chạy link OBS nhúng trực tiếp
+        // Ẩn bảng nếu chạy qua link nhúng trực tiếp trên OBS
         if (params.get("live") === "1" || params.get("d") || params.get("x")) {
             panel.style.opacity = "0";
             panel.style.visibility = "hidden";
-            btnFs.style.display = "none"; // OBS Source thì không cần nút Full
-            zoomBox.style.display = "flex";
-        } else {
-            zoomBox.style.display = "flex";
+            btnFs.style.display = "none";
         }
 
         function updateNames() {
@@ -297,56 +234,32 @@
             }, 2000);
         }
 
-        // ĐIỀU KHIỂN ZOOM HYBRID
-        function applyHybridZoom(inputValue) {
-            const zoomRatio = parseFloat(inputValue) / 100;
-            iframe.style.transform = `scale(${zoomRatio})`;
-            try {
-                iframe.contentWindow.postMessage({ "zoom": parseInt(inputValue) }, '*');
-            } catch (e) {
-                console.log("Lỗi lệnh zoom:", e);
-            }
-        }
-
-        function changeZoomBtn(direction) {
-            const slider = document.getElementById('zoom-slider');
-            let newValue = parseInt(slider.value) + (direction * 20);
-            if (newValue < 100) newValue = 100;
-            if (newValue > 300) newValue = 300;
-            slider.value = newValue;
-            applyHybridZoom(newValue);
-        }
-
-        // 🔥 LOGIC MỚI: Bấm FULL là giấu sạch ô nhập liệu
+        // ĐIỀU KHIỂN FULLSCREEN ẨN Ô NHẬP LIỆU
         btnFs.addEventListener("click", async () => {
             try {
                 if (!document.fullscreenElement) {
                     await document.documentElement.requestFullscreen();
-                    btnFs.innerText = "EXIT";
-                    btnFs.style.background = "#f44336";
-                    
-                    // Ẩn mượt mà bảng nhập liệu đi
+                    btnFs.innerText = "✕"; // Thành dấu X tinh tế
+                    btnFs.classList.add("fs-active");
                     panel.style.opacity = "0";
                     panel.style.visibility = "hidden";
                 } else {
                     await document.exitFullscreen();
                     btnFs.innerText = "FULL";
-                    btnFs.style.background = "#4D80F5";
-                    
-                    // Hiện lại bảng nhập liệu khi thoát toàn màn hình
+                    btnFs.classList.remove("fs-active");
                     panel.style.opacity = "1";
                     panel.style.visibility = "visible";
                 }
             } catch(e) {
-                console.log("Lỗi kích hoạt toàn màn hình:", e);
+                console.log("Lỗi fullscreen:", e);
             }
         });
 
-        // Lắng nghe sự kiện nếu người dùng bấm nút Esc hoặc vuốt màn hình để thoát Fullscreen tự do
+        // Theo dõi nếu thoát full bằng phím cứng/vuốt màn hình
         document.addEventListener('fullscreenchange', () => {
             if (!document.fullscreenElement) {
                 btnFs.innerText = "FULL";
-                btnFs.style.background = "#4D80F5";
+                btnFs.classList.remove("fs-active");
                 panel.style.opacity = "1";
                 panel.style.visibility = "visible";
             }
@@ -356,7 +269,7 @@
             if (e.key === 'Enter') { updateNames(); }
         });
 
-        // Bảo mật chặn F12
+        // Khóa chuột phải bảo mật nhẹ
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.onkeydown = function(e) {
             if (e.keyCode == 123) return false;
