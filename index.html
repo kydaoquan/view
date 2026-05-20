@@ -49,34 +49,42 @@
             width: 100%;
             height: 100%;
             z-index: 10;
-            pointer-events: none; /* Quan trọng: Click xuyên qua để điều khiển video */
+            pointer-events: none;
         }
 
-        /* Tên giải đấu sát Top, chính giữa */
+        /* BANNER GIẢI ĐẤU - SÁT TOP CHÍNH GIỮA, TỰ CO CHỮ */
         .tournament-box {
             position: absolute;
-            top: 15px; /* Sát mép trên */
+            top: 0; /* Đẩy lên sát kịch trần màn hình */
             left: 50%;
             transform: translateX(-50%);
-            background: linear-gradient(180deg, rgba(30, 30, 30, 0.9), rgba(0, 0, 0, 0.9));
-            padding: 8px 35px;
-            border-radius: 0 0 20px 20px; /* Bo góc dưới kiểu banner treo */
-            border: 1.5px solid rgba(255, 215, 0, 0.5);
-            border-top: none;
+            background: linear-gradient(180deg, rgba(25, 25, 25, 0.95), rgba(5, 5, 5, 0.95));
+            padding: 6px 40px;
+            border-radius: 0 0 15px 15px; /* Chỉ bo góc dưới */
+            border: 1.5px solid rgba(255, 215, 0, 0.6);
+            border-top: none; /* Bỏ viền trên để dính liền vào viền màn hình */
             color: #FFD700;
             font-weight: 800;
-            font-size: 18px;
-            letter-spacing: 1px;
+            
+            /* --- LOGIC TỰ ĐỘNG BÓP CHỮ NHỎ LẠI --- */
+            font-size: calc(12px + 0.6vw); /* Tự co giãn theo độ rộng màn hình máy tính/điện thoại */
+            max-width: 45vw; /* Khống chế độ rộng tối đa bằng 45% màn hình */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            word-break: break-word; /* Nếu dài quá thì tự ngắt xuống dòng thay vì tràn ra ngoài */
+            
+            letter-spacing: 0.5px;
             text-transform: uppercase;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8);
             backdrop-filter: blur(8px);
-            white-space: nowrap;
         }
 
         /* Hai bên tên Player */
         .player-side {
             position: absolute;
-            top: 70px; /* Nằm dưới tên giải đấu một chút */
+            top: 60px; /* Nhích lên trên một chút cho gọn khung hình */
             width: 100%;
             display: flex;
             justify-content: space-between;
@@ -87,8 +95,8 @@
             min-width: 200px;
             padding: 12px 25px;
             border-radius: 10px;
-            font-weight: 500;
-            font-size: 25px;
+            font-weight: 700;
+            font-size: 26px;
             color: #fff;
             text-align: center;
             backdrop-filter: blur(10px);
@@ -130,7 +138,8 @@
 
         input:focus { border-color: #00c853; }
         
-        #inTour { width: 200px; border-color: #FFD700; }
+        /* Ô nhập giải đấu cho rộng rãi để gõ tên dài */
+        #inTour { width: 250px; border-color: #FFD700; }
         #inRed, #inBlue { width: 160px; }
 
         .btn {
@@ -154,7 +163,6 @@
             z-index: 110;
         }
 
-        /* Nút thoát X nhỏ khi đang Full */
         .fs-active-style {
             background: rgba(255, 255, 255, 0.1) !important;
             color: #aaa !important;
@@ -166,9 +174,9 @@
 
         /* Mobile */
         @media (max-width: 768px) {
-            .player-side { padding: 0 15px; top: 55px; }
-            .player { min-width: 120px; font-size: 16px; padding: 8px; }
-            .tournament-box { font-size: 12px; padding: 5px 15px; }
+            .player-side { padding: 0 15px; top: 45px; }
+            .player { min-width: 110px; font-size: 15px; padding: 6px; }
+            .tournament-box { font-size: 11px; padding: 4px 12px; max-width: 60vw; }
             .control-panel { flex-direction: column; width: 90%; bottom: 10px; }
             #inTour, #inRed, #inBlue { width: 100%; }
         }
@@ -198,13 +206,11 @@
     <button class="btn" id="fsBtn">FULL</button>
 
     <script>
-        // 🔐 BẢO MẬT: Mã hóa link VDO
         const secureLink = atob("aHR0cHM6Ly92ZG8ubmluamEvP3ZpZXc9cXVvY2RhbmcmY2xlYW5vdXRwdXQmbm9hdWRpbyZidWZmZXI9MCZidXR0b25zPTA=");
         const iframe = document.getElementById("main-stream");
         const panel = document.getElementById("panel");
         const btnFs = document.getElementById("fsBtn");
 
-        // Nhận dữ liệu từ URL
         const u = new URLSearchParams(window.location.search);
         document.getElementById("dispTour").innerText = u.get("g") || "GIẢI ĐẤU CỜ TƯỚNG";
         document.getElementById("dispRed").innerText = u.get("d") || "TIÊN";
@@ -212,7 +218,6 @@
 
         iframe.src = secureLink;
 
-        // Nếu là link nhúng OBS thì ẩn panel điều khiển
         if (u.get("live") === "1") {
             panel.style.display = "none";
             btnFs.style.display = "none";
@@ -227,12 +232,10 @@
             document.getElementById("dispRed").innerText = red;
             document.getElementById("dispBlue").innerText = blue;
 
-            // Lưu vào URL thầm lặng
             const newU = `?g=${encodeURIComponent(tour)}&d=${encodeURIComponent(red)}&x=${encodeURIComponent(blue)}`;
             window.history.pushState({}, '', newU);
         }
 
-        // ĐIỀU KHIỂN FULLSCREEN (Chỉ ẩn bảng nhập, giữ lại Overlay)
         btnFs.addEventListener("click", async () => {
             if (!document.fullscreenElement) {
                 await document.documentElement.requestFullscreen();
@@ -254,7 +257,10 @@
             }
         });
 
-        // 🔐 BẢO MẬT: Khóa chuột phải và F12
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') { applyInfo(); }
+        });
+
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.onkeydown = function(e) {
             if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) || (e.ctrlKey && e.keyCode == 85)) return false;
