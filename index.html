@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KĐQ Live Stream - Strict Control Overlay</title>
+    <title>KĐQ Live Stream - Absolute Fixed Stable Overlay</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght=600;800&display=swap" rel="stylesheet">
     <style>
         * {
@@ -203,7 +203,7 @@
         <iframe id="main-stream" src="" allow="camera *; microphone *; autoplay *; fullscreen *" allowfullscreen></iframe>
     </div>
 
-    <div class="overlay-container">
+    <div class="overlay-container" id="overlayContainer">
         <div class="wrapper-box" id="wrapTour">
             <div class="tournament-box" id="dispTour">GIẢI ĐẤU CỜ TƯỚNG</div>
             <div class="resizer"></div>
@@ -234,8 +234,9 @@
         const iframe = document.getElementById("main-stream");
         const panel = document.getElementById("panel");
         const btnFs = document.getElementById("fsBtn");
+        const container = document.getElementById("overlayContainer");
 
-        // Quản lý dữ liệu bộ nhớ vị trí gốc
+        // Bộ nhớ lưu vị trí gốc tuyệt đối
         const state = {
             wrapTour: { x: window.innerWidth/2 - 175, y: 10, w: 350, h: 50 },
             wrapRed: { x: 80, y: 75, w: 220, h: 60 },
@@ -263,7 +264,6 @@
         if (u.get("live") === "1") {
             panel.style.display = "none";
             btnFs.style.display = "none";
-            document.querySelectorAll('.resizer').forEach(r => r.style.display = 'none');
         }
 
         if (posData) {
@@ -349,7 +349,7 @@
 
         document.addEventListener('keypress', (e) => { if (e.key === 'Enter') applyInfo(); });
 
-        // 🔥 ĐÃ SỬA: CHỈ KÍCH HOẠT KÉO KHI CLICK ĐÚNG VÀO Ô, KHÔNG LẮNG NGHE ĐẠI TRÀ
+        // 🔥 KHÓA CHẶT LOGIC - SỬ DỤNG EVENT DELEGATION ỔN ĐỊNH TUYỆT ĐỐI
         let activeId = null, isDragging = false, isResizing = false;
         let startX, startY, baseX, baseY, baseW, baseH, ticking = false;
 
@@ -360,9 +360,9 @@
         }
 
         const onStart = (e) => {
-            // Tìm chính xác wrapper-box mục tiêu
+            // Check xem chuột nhấn xuống có nằm trong ô wrapper-box nào không
             const box = e.target.closest('.wrapper-box');
-            if (!box) return; // Nếu nhấn trúng input hoặc khoảng không -> Bỏ qua ngay lập tức!
+            if (!box) return; // Không trúng ô nào -> Chặn đứng lập tức, không cho chạy bậy
 
             activeId = box.id;
             const resizer = box.querySelector('.resizer');
@@ -417,13 +417,11 @@
             activeId = null;
         };
 
-        // Gắn sự kiện mousedown/touchstart TRỰC TIẾP vào các ô để bắt chuẩn xác
-        document.querySelectorAll('.wrapper-box').forEach(box => {
-            box.addEventListener('mousedown', onStart);
-            box.addEventListener('touchstart', onStart, { passive: false });
-        });
+        // CHỈ LẮNG NGHE SỰ KIỆN TRÊN ĐÚNG VÙNG CHỨA CÁC Ô ĐỂ CHỐNG "NGÁO ĐÁ" VỊ TRÍ
+        container.addEventListener('mousedown', onStart);
+        container.addEventListener('touchstart', onStart, { passive: false });
 
-        // Sự kiện move và end vẫn bắt ở window để tránh bị tuột tay khi di nhanh
+        // Move và End bắt ở Window để mượt khi văng tay nhanh
         window.addEventListener('mousemove', onMove, { passive: false });
         window.addEventListener('mouseup', onEnd);
         window.addEventListener('touchmove', onMove, { passive: false });
