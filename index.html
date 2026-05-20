@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KĐQ Live Stream - Pro Overlay</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+    <title>KĐQ Live Stream - Pro Tournament Overlay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
     <style>
-        /* Reset cơ bản để tránh tràn màn hình */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -25,7 +24,7 @@
             height: 100vh;
         }
 
-        /* KHUNG BỌC IFRAME */
+        /* VIDEO NỀN */
         #iframe-wrapper {
             position: fixed;
             top: 0;
@@ -33,293 +32,232 @@
             width: 100%;
             height: 100%;
             z-index: 1;
-            overflow: hidden;
             background: #000;
         }
 
-        /* VIDEO - Full màn hình */
         iframe {
             width: 100%;
             height: 100%;
             border: none;
         }
 
-        /* OVERLAY - CHỨA TÊN PLAYER VÀ GIẢI ĐẤU */
-        .overlay {
+        /* --- HỆ THỐNG OVERLAY (HIỆN CẢ KHI FULL) --- */
+        .overlay-container {
             position: fixed;
-            top: 80px;
+            top: 0;
             left: 0;
             width: 100%;
+            height: 100%;
             z-index: 10;
-            pointer-events: none; /* Click xuyên qua video */
+            pointer-events: none; /* Quan trọng: Click xuyên qua để điều khiển video */
+        }
+
+        /* Tên giải đấu sát Top, chính giữa */
+        .tournament-box {
+            position: absolute;
+            top: 15px; /* Sát mép trên */
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(180deg, rgba(30, 30, 30, 0.9), rgba(0, 0, 0, 0.9));
+            padding: 8px 35px;
+            border-radius: 0 0 20px 20px; /* Bo góc dưới kiểu banner treo */
+            border: 1.5px solid rgba(255, 215, 0, 0.5);
+            border-top: none;
+            color: #FFD700;
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            white-space: nowrap;
+        }
+
+        /* Hai bên tên Player */
+        .player-side {
+            position: absolute;
+            top: 70px; /* Nằm dưới tên giải đấu một chút */
+            width: 100%;
             display: flex;
             justify-content: space-between;
-            align-items: center; /* Căn cho các thành phần thẳng hàng ngang */
-            padding: 0 150px;
+            padding: 0 80px;
         }
 
         .player {
-            min-width: 180px;
-            padding: 12px 28px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 28px;
+            min-width: 200px;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 25px;
             color: #fff;
             text-align: center;
             backdrop-filter: blur(10px);
-            border: 2px solid rgba(255,255,255,0.3);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: all 0.3s ease;
+            border: 2px solid rgba(255,255,255,0.2);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
         }
 
-        .red {
-            background: linear-gradient(135deg, rgba(255, 42, 42, 0.9), rgba(122, 0, 0, 0.9));
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.4), 0 8px 25px rgba(0,0,0,0.6);
-        }
+        .red { background: linear-gradient(135deg, #cc0000, #660000); }
+        .blue { background: linear-gradient(135deg, #0044cc, #002266); }
 
-        .blue {
-            background: linear-gradient(135deg, rgba(42, 123, 255, 0.9), rgba(0, 31, 122, 0.9));
-            box-shadow: 0 0 20px rgba(0, 120, 255, 0.4), 0 8px 25px rgba(0,0,0,0.6);
-        }
-
-        /* Ô HIỂN THỊ GIẢI ĐẤU Ở CHÍNH GIỮA */
-        .tournament {
-            background: linear-gradient(135deg, rgba(40, 40, 40, 0.85), rgba(15, 15, 15, 0.85));
-            padding: 10px 25px;
-            border-radius: 30px; /* Bo tròn kiểu viên thuốc nhìn cho sang */
-            font-weight: 700;
-            font-size: 20px; /* Chữ nhỏ hơn tên player tí cho cân đối */
-            color: #FFD700; /* Màu vàng Gold hoàng gia cực nổi */
-            text-align: center;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 215, 0, 0.3); /* Viền vàng nhẹ */
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2), 0 5px 15px rgba(0,0,0,0.5);
-            max-width: 400px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis; /* Dài quá tự font nhỏ/gọn lại */
-        }
-
-        /* PANEL ĐIỀU KHIỂN */
-        .panel {
+        /* --- BẢNG ĐIỀU KHIỂN (ẨN KHI FULL) --- */
+        .control-panel {
             position: fixed;
             bottom: 25px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(20, 20, 20, 0.9);
-            padding: 15px;
+            background: rgba(15, 15, 15, 0.95);
+            padding: 15px 25px;
             border-radius: 15px;
             display: flex;
-            gap: 10px;
-            z-index: 20;
+            gap: 12px;
+            z-index: 100;
             border: 1px solid rgba(255,255,255,0.1);
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         input {
-            background: #333;
+            background: #252525;
             color: white;
-            padding: 10px 15px;
+            padding: 12px;
             border: 1px solid #444;
             border-radius: 8px;
             outline: none;
             font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
             -webkit-user-select: text;
             user-select: text;
         }
 
-        input:focus {
-            border-color: #00c853;
-        }
+        input:focus { border-color: #00c853; }
+        
+        #inTour { width: 200px; border-color: #FFD700; }
+        #inRed, #inBlue { width: 160px; }
 
-        /* Ô nhập giải đấu dài hơn chút cho dễ gõ */
-        #inputTour {
-            width: 220px;
-            border-color: #FFD700;
-        }
-
-        .btn-action {
+        .btn {
             padding: 10px 20px;
             border: none;
             border-radius: 8px;
-            background: #00c853;
-            color: white;
             font-weight: 700;
             cursor: pointer;
             transition: 0.2s;
+            color: white;
         }
 
-        .btn-action:hover {
-            background: #00e676;
-            transform: scale(1.05);
-        }
+        .btn-update { background: #00c853; }
+        .btn-update:hover { background: #00e676; transform: scale(1.05); }
 
-        /* NÚT FULL ĐỘC LẬP */
         #fsBtn {
             background: #4D80F5;
             position: fixed !important;
             bottom: 25px;
-            left: 24px;
-            z-index: 25;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            min-width: 70px;
-            text-align: center;
+            left: 25px;
+            z-index: 110;
         }
 
-        .fs-active {
-            background: rgba(0, 0, 0, 0.4) !important;
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            color: rgba(255, 255, 255, 0.6) !important;
-            bottom: 15px !important;
-            left: 15px !important;
-            padding: 6px 12px !important;
-            font-size: 14px !important;
-            min-width: auto !important;
-            border-radius: 6px !important;
+        /* Nút thoát X nhỏ khi đang Full */
+        .fs-active-style {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #aaa !important;
+            bottom: 10px !important;
+            left: 10px !important;
+            padding: 5px 10px !important;
+            font-size: 12px !important;
         }
 
-        /* MOBILE OPTIMIZATION */
+        /* Mobile */
         @media (max-width: 768px) {
-            .overlay {
-                padding: 0 20px;
-                top: 20px;
-            }
-            .player {
-                min-width: 100px;
-                font-size: 14px;
-                padding: 6px 12px;
-            }
-            .tournament {
-                font-size: 12px;
-                padding: 6px 12px;
-                max-width: 150px;
-            }
-            .panel {
-                flex-direction: column;
-                width: 85%;
-            }
+            .player-side { padding: 0 15px; top: 55px; }
+            .player { min-width: 120px; font-size: 16px; padding: 8px; }
+            .tournament-box { font-size: 12px; padding: 5px 15px; }
+            .control-panel { flex-direction: column; width: 90%; bottom: 10px; }
+            #inTour, #inRed, #inBlue { width: 100%; }
         }
     </style>
 </head>
 <body>
 
     <div id="iframe-wrapper">
-        <iframe id="stream-iframe" src="" allow="camera *; microphone *; autoplay *; fullscreen *" allowfullscreen></iframe>
+        <iframe id="main-stream" src="" allow="camera *; microphone *; autoplay *; fullscreen *" allowfullscreen></iframe>
     </div>
 
-    <div class="overlay">
-        <div class="player red" id="name1">Tiên</div>
-        <div class="tournament" id="tourName">Giải Đấu Live</div>
-        <div class="player blue" id="name2">Hậu</div>
+    <div class="overlay-container">
+        <div class="tournament-box" id="dispTour">GIẢI ĐẤU CỜ TƯỚNG</div>
+        <div class="player-side">
+            <div class="player red" id="dispRed">TIÊN</div>
+            <div class="player blue" id="dispBlue">HẬU</div>
+        </div>
     </div>
 
-    <div class="panel" id="panel">
-        <input id="inputTour" placeholder="Tên Giải Đấu / Trận">
-        <input id="input1" placeholder="Tên Đỏ (Tiên)">
-        <input id="input2" placeholder="Tên Xanh (Hậu)">
-        <button class="btn-action" onclick="updateAllInfo()">Cập nhật ngay</button>
+    <div class="control-panel" id="panel">
+        <input id="inTour" placeholder="Tên Giải Đấu">
+        <input id="inRed" placeholder="Tên Bên Đỏ (Tiên)">
+        <input id="inBlue" placeholder="Tên Bên Xanh (Hậu)">
+        <button class="btn btn-update" onclick="applyInfo()">CẬP NHẬT</button>
     </div>
 
-    <button class="btn-action" id="fsBtn">FULL</button>
+    <button class="btn" id="fsBtn">FULL</button>
 
     <script>
-        // Lớp 1: Giấu link VDO sang Base64
-        const secureToken = atob("aHR0cHM6Ly92ZG8ubmluamEvP3ZpZXc9cXVvY2RhbmcmY2xlYW5vdXRwdXQmbm9hdWRpbyZidWZmZXI9MCZidXR0b25zPTA=");
-        
-        const iframe = document.getElementById("stream-iframe");
+        // 🔐 BẢO MẬT: Mã hóa link VDO
+        const secureLink = atob("aHR0cHM6Ly92ZG8ubmluamEvP3ZpZXc9cXVvY2RhbmcmY2xlYW5vdXRwdXQmbm9hdWRpbyZidWZmZXI9MCZidXR0b25zPTA=");
+        const iframe = document.getElementById("main-stream");
         const panel = document.getElementById("panel");
         const btnFs = document.getElementById("fsBtn");
 
-        // Khởi tạo dữ liệu từ URL (Thêm tham số g cho giải đấu)
-        const params = new URLSearchParams(window.location.search);
-        const initialTour = params.get("g") || "Giải Đấu Live";
-        const initialRed = params.get("d") || "Tiên";
-        const initialBlue = params.get("x") || "Hậu";
+        // Nhận dữ liệu từ URL
+        const u = new URLSearchParams(window.location.search);
+        document.getElementById("dispTour").innerText = u.get("g") || "GIẢI ĐẤU CỜ TƯỚNG";
+        document.getElementById("dispRed").innerText = u.get("d") || "TIÊN";
+        document.getElementById("dispBlue").innerText = u.get("x") || "HẬU";
 
-        const elTour = document.getElementById("tourName");
-        const elRed = document.getElementById("name1");
-        const elBlue = document.getElementById("name2");
+        iframe.src = secureLink;
 
-        elTour.innerText = initialTour;
-        elRed.innerText = initialRed;
-        elBlue.innerText = initialBlue;
-
-        iframe.src = secureToken;
-
-        // Tự ẩn bảng nếu xài link nhúng OBS trực tiếp
-        if (params.get("live") === "1" || params.get("d") || params.get("x") || params.get("g")) {
-            panel.style.opacity = "0";
-            panel.style.visibility = "hidden";
+        // Nếu là link nhúng OBS thì ẩn panel điều khiển
+        if (u.get("live") === "1") {
+            panel.style.display = "none";
             btnFs.style.display = "none";
         }
 
-        // Hàm cập nhật đồng thời cả Tên Giải đấu + Tên Player
-        function updateAllInfo() {
-            const t0 = document.getElementById("inputTour").value.trim() || "Giải Đấu Live";
-            const n1 = document.getElementById("input1").value.trim() || "Tiên";
-            const n2 = document.getElementById("input2").value.trim() || "Hậu";
+        function applyInfo() {
+            const tour = document.getElementById("inTour").value.trim() || "GIẢI ĐẤU CỜ TƯỚNG";
+            const red = document.getElementById("inRed").value.trim() || "TIÊN";
+            const blue = document.getElementById("inBlue").value.trim() || "HẬU";
 
-            elTour.innerText = t0;
-            elRed.innerText = n1;
-            elBlue.innerText = n2;
+            document.getElementById("dispTour").innerText = tour;
+            document.getElementById("dispRed").innerText = red;
+            document.getElementById("dispBlue").innerText = blue;
 
-            // Đẩy tham số lên URL thầm lặng
-            const newURL = `?g=${encodeURIComponent(t0)}&d=${encodeURIComponent(n1)}&x=${encodeURIComponent(n2)}`;
-            window.history.pushState({}, '', newURL);
-
-            const btnUpdate = document.querySelector('.panel button');
-            btnUpdate.innerText = "Đã lưu!";
-            btnUpdate.style.background = "#2196F3";
-            setTimeout(() => {
-                btnUpdate.innerText = "Cập nhật ngay";
-                btnUpdate.style.background = "#00c853";
-            }, 2000);
+            // Lưu vào URL thầm lặng
+            const newU = `?g=${encodeURIComponent(tour)}&d=${encodeURIComponent(red)}&x=${encodeURIComponent(blue)}`;
+            window.history.pushState({}, '', newU);
         }
 
-        // ĐIỀU KHIỂN FULLSCREEN ẨN SẠCH Ô NHẬP LIỆU
+        // ĐIỀU KHIỂN FULLSCREEN (Chỉ ẩn bảng nhập, giữ lại Overlay)
         btnFs.addEventListener("click", async () => {
-            try {
-                if (!document.fullscreenElement) {
-                    await document.documentElement.requestFullscreen();
-                    btnFs.innerText = "✕"; 
-                    btnFs.classList.add("fs-active");
-                    panel.style.opacity = "0";
-                    panel.style.visibility = "hidden";
-                } else {
-                    await document.exitFullscreen();
-                    btnFs.innerText = "FULL";
-                    btnFs.classList.remove("fs-active");
-                    panel.style.opacity = "1";
-                    panel.style.visibility = "visible";
-                }
-            } catch(e) {
-                console.log("Lỗi fullscreen:", e);
+            if (!document.fullscreenElement) {
+                await document.documentElement.requestFullscreen();
+                btnFs.innerText = "✕";
+                btnFs.classList.add("fs-active-style");
+                panel.style.opacity = "0";
+                panel.style.visibility = "hidden";
+            } else {
+                await document.exitFullscreen();
             }
         });
 
         document.addEventListener('fullscreenchange', () => {
             if (!document.fullscreenElement) {
                 btnFs.innerText = "FULL";
-                btnFs.classList.remove("fs-active");
+                btnFs.classList.remove("fs-active-style");
                 panel.style.opacity = "1";
                 panel.style.visibility = "visible";
             }
         });
 
-        document.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') { updateAllInfo(); }
-        });
-
-        // Lớp 2: Hệ thống pháo đài khóa chặt Chuột phải và F12
+        // 🔐 BẢO MẬT: Khóa chuột phải và F12
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.onkeydown = function(e) {
-            if (e.keyCode == 123) return false; // F12
-            if (e.ctrlKey && e.shiftKey && e.keyCode == 73) return false; // Ctrl+Shift+I
-            if (e.ctrlKey && e.shiftKey && e.keyCode == 74) return false; // Ctrl+Shift+J
-            if (e.ctrlKey && e.shiftKey && e.keyCode == 67) return false; // Ctrl+Shift+C
-            if (e.ctrlKey && e.keyCode == 85) return false; // Ctrl+U
-            if (e.metaKey && e.altKey && e.keyCode == 73) return false; // Cmd+Opt+I (Mac)
-            if (e.metaKey && e.keyCode == 85) return false; // Cmd+U (Mac)
+            if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) || (e.ctrlKey && e.keyCode == 85)) return false;
         };
     </script>
 </body>
