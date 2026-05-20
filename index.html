@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KĐQ Live Stream </title>
+    <title>KĐQ Live Overlay</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -64,7 +64,7 @@
 
         #tournament-display {
             position: fixed;
-            bottom: 50px;
+            bottom: 100px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
@@ -76,6 +76,24 @@
             padding: 8px 25px;
             border-radius: 30px;
             border: 1px solid rgba(255, 215, 0, 0.3);
+            pointer-events: none;
+            max-width: 80%;
+            text-align: center;
+            word-wrap: break-word;
+        }
+
+        #extra-info-display {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            color: #fff;
+            font-size: 18px;
+            background: rgba(0,0,0,0.7);
+            padding: 5px 15px;
+            border-radius: 10px;
+            display: none;
             pointer-events: none;
         }
 
@@ -92,7 +110,7 @@
             border: 1px solid #555;
         }
 
-        input { background: #222; color: white; padding: 12px; border: 1px solid #444; border-radius: 6px; outline: none; width: 100%; }
+        input, textarea { background: #222; color: white; padding: 12px; border: 1px solid #444; border-radius: 6px; outline: none; width: 100%; }
         .btn-action { padding: 12px; border: none; border-radius: 6px; background: #00c853; color: white; font-weight: 700; cursor: pointer; }
     </style>
 </head>
@@ -110,35 +128,51 @@
     </div>
 
     <div id="tournament-display"></div>
+    <div id="extra-info-display"></div>
 
     <div class="panel" id="panel">
-        <input id="inputTournament" placeholder="Thông tin giải đấu">
+        <input id="inputTournament" placeholder="Tên giải đấu">
+        <textarea id="inputExtra" placeholder="Thông tin linh tinh..." style="height:60px;"></textarea>
+        <label style="color:white; display:flex; align-items:center; gap:10px;">
+            <input type="checkbox" id="checkExtra" style="width:auto;"> Hiện thông tin linh tinh
+        </label>
         <div style="display: flex; gap: 8px;">
-            <input id="input1" placeholder="Nhập kỳ thủ đi tiên">
-            <input id="input2" placeholder="Nhập kỳ thủ đi hậu">
+            <input id="input1" placeholder="Tên Đỏ">
+            <input id="input2" placeholder="Tên Xanh">
         </div>
         <button class="btn-action" onclick="updateInfo()">Cập nhật thông tin</button>
     </div>
 
     <script>
-        // Khóa DevTools và F12
+        document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
             if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) || (e.ctrlKey && e.keyCode == 85)) {
                 return false;
             }
         }
+        setInterval(() => { console.clear(); }, 1000);
 
         const secretDomain = atob("aHR0cHM6Ly92ZG8ubmluamEv");
         const iframe = document.getElementById("stream-iframe");
         iframe.src = `${secretDomain}?view=quocdang&cleanoutput&noaudio&buffer=0`;
 
         const params = new URLSearchParams(window.location.search);
+        
+        // Load data từ URL
         document.getElementById("name1").innerText = params.get("d") || "Tiên";
         document.getElementById("name2").innerText = params.get("x") || "Hậu";
         document.getElementById("tournament-display").innerText = params.get("t") || "";
+        
+        const extraData = params.get("e") || "";
+        const showExtra = params.get("c") === "1";
+        const extraDiv = document.getElementById("extra-info-display");
+        extraDiv.innerText = extraData;
+        extraDiv.style.display = (showExtra && extraData) ? "block" : "none";
 
         function updateInfo() {
             const tournament = document.getElementById("inputTournament").value.trim();
+            const extra = document.getElementById("inputExtra").value.trim();
+            const isChecked = document.getElementById("checkExtra").checked;
             const n1 = document.getElementById("input1").value.trim() || "Tiên";
             const n2 = document.getElementById("input2").value.trim() || "Hậu";
             
@@ -146,11 +180,15 @@
             document.getElementById("name2").innerText = n2;
             document.getElementById("tournament-display").innerText = tournament;
             
-            const newURL = `?d=${encodeURIComponent(n1)}&x=${encodeURIComponent(n2)}&t=${encodeURIComponent(tournament)}`;
+            const extraDiv = document.getElementById("extra-info-display");
+            extraDiv.innerText = extra;
+            extraDiv.style.display = (isChecked && extra) ? "block" : "none";
+            
+            const newURL = `?d=${encodeURIComponent(n1)}&x=${encodeURIComponent(n2)}&t=${encodeURIComponent(tournament)}&e=${encodeURIComponent(extra)}&c=${isChecked ? 1 : 0}`;
             window.history.pushState({}, '', newURL);
         }
 
-        if (params.get("d") || params.get("x") || params.get("t")) {
+        if (params.get("panel") !== "1" && (params.get("d") || params.get("x") || params.get("t"))) {
             document.getElementById("panel").style.display = "none";
         }
     </script>
