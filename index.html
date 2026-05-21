@@ -66,7 +66,7 @@
         }
 .overlay {
             position: fixed;
-            top: 100px; /* Hạ xuống từ 40px xuống 100px để không chạm header */
+            top: 80px; /* Hạ xuống từ 40px xuống 100px để không chạm header */
             width: 100%;
             z-index: 10;
             display: flex;
@@ -77,7 +77,7 @@
 
         #tournament-display {
             position: fixed;
-            bottom: 100px;
+            bottom: 50px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
@@ -98,7 +98,7 @@
 
         #extra-info-display {
             position: fixed;
-            top: 10px;
+            top: 8px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
@@ -151,10 +151,10 @@
     <div id="extra-info-display"></div>
 
     <div class="panel" id="panel">
-        <input id="inputTournament" placeholder="Linh tinh">
-        <textarea id="inputExtra" placeholder="Thông tin giải đấu..." style="height:60px;"></textarea>
+        <input id="inputTournament" placeholder="Cập nhật vòng đấu">
+        <textarea id="inputExtra" placeholder="Thông tin giải đấu..." style="height:40px;"></textarea>
         <label style="color:white; display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" id="checkExtra" style="width:auto;"> Hiện thông tin giải đấu
+            <input type="checkbox" id="checkExtra" style="width:8px;"> Hiện thông tin giải đấu
         </label>
         <div style="display: flex; gap: 8px;">
             <input id="input1" placeholder="Tên Đỏ">
