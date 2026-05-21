@@ -36,7 +36,6 @@
             pointer-events: none;
         }
 
-     
         .player {
             min-width: 140px;
             padding: 12px 50px;
@@ -52,7 +51,7 @@
         .red { background: linear-gradient(135deg, rgba(255, 60, 60, 0.8), rgba(150, 0, 0, 0.8)); }
         .blue { background: linear-gradient(135deg, rgba(0, 45, 140, 0.8), rgba(0, 10, 70, 0.8)); }
 
-       /* CSS cho các ô nhập liệu */
+        /* CSS cho các ô nhập liệu */
         input, textarea { 
             background: #222; 
             color: white; 
@@ -61,12 +60,13 @@
             border-radius: 6px; 
             outline: none; 
             width: 100%; 
-            font-family: 'Montserrat', sans-serif; /* Thêm font này vào */
+            font-family: 'Montserrat', sans-serif; 
             font-size: 14px;
         }
-.overlay {
+
+        .overlay {
             position: fixed;
-            top: 70px; /* Hạ xuống từ 40px xuống 100px để không chạm header */
+            top: 70px; 
             width: 100%;
             z-index: 10;
             display: flex;
@@ -81,7 +81,7 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
-            color: #FFD700; /* Màu vàng Gold cũ */
+            color: #FFD700; 
             font-size: 15px;
             font-weight: 500;
             text-shadow: 0 2px 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(0,0,0,0.8);
@@ -102,7 +102,7 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
-            color: #FFD700; /* Màu vàng Gold cũ */
+            color: #FFD700; 
             font-size: 25px;
             font-weight: 500;
             text-shadow: 0 2px 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(0,0,0,0.8);
@@ -117,6 +117,7 @@
             max-width: 90%;
             font-family: 'Montserrat', sans-serif;
         }
+
         .panel {
             position: fixed;
             bottom: 150px; left: 10px; right: 10px;
@@ -130,7 +131,6 @@
             border: 1px solid #555;
         }
 
-        input, textarea { background: #222; color: white; padding: 12px; border: 1px solid #444; border-radius: 6px; outline: none; width: 100%; }
         .btn-action { padding: 12px; border: none; border-radius: 6px; background: #00c853; color: white; font-weight: 700; cursor: pointer; }
     </style>
 </head>
@@ -163,7 +163,30 @@
         <button class="btn-action" onclick="updateInfo()">Cập nhật thông tin</button>
     </div>
 
-  <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // MÀY THAY ĐOẠN NÀY THÀNH CONFIG CỦA MÀY NHA
+        const firebaseConfig = {
+            apiKey: "AIzaSy...", 
+            authDomain: "kydaoquan.firebaseapp.com",
+            databaseURL: "https://kydaoquan-default-rtdb.firebaseio.com", 
+            projectId: "kydaoquan",
+            storageBucket: "kydaoquan.appspot.com",
+            messagingSenderId: "...",
+            appId: "..."
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const dbRef = ref(db, "overlay_data");
+
+      const params = new URLSearchParams(window.location.search);
+if (params.get("panel") !== "1") {
+    document.getElementById("panel").style.display = "none";
+}
+
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
             if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) || (e.ctrlKey && e.keyCode == 85)) {
@@ -173,55 +196,43 @@
         setInterval(() => { console.clear(); }, 1000);
 
         const secretDomain = atob("aHR0cHM6Ly92ZG8ubmluamEv");
-        const iframe = document.getElementById("stream-iframe");
-        iframe.src = `${secretDomain}?view=quocdang&cleanoutput&noaudio&buffer=0`;
+        document.getElementById("stream-iframe").src = `${secretDomain}?view=quocdang&cleanoutput&noaudio&buffer=0`;
 
-        const params = new URLSearchParams(window.location.search);
-        
-        // 1. Load data ưu tiên từ URL (để share link), nếu không có thì lấy từ LocalStorage
-        const getVal = (key, defaultVal) => params.get(key) || localStorage.getItem(key) || defaultVal;
+        // Đồng bộ dữ liệu Real-time tự động giữa các máy
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                document.getElementById("name1").innerText = data.d || "Tiên";
+                document.getElementById("name2").innerText = data.x || "Hậu";
+                document.getElementById("tournament-display").innerText = data.t || "";
+                
+                const extraDiv = document.getElementById("extra-info-display");
+                extraDiv.innerText = data.e || "";
+                extraDiv.style.display = (data.c === 1 && data.e) ? "block" : "none";
 
-        // Điền dữ liệu vào form
-        document.getElementById("inputTournament").value = getVal("t", "");
-        document.getElementById("inputExtra").value = getVal("e", "");
-        document.getElementById("input1").value = getVal("d", "Tiên");
-        document.getElementById("input2").value = getVal("x", "Hậu");
-        document.getElementById("checkExtra").checked = (getVal("c", "0") === "1");
+                document.getElementById("input1").value = data.d || "Tiên";
+                document.getElementById("input2").value = data.x || "Hậu";
+                document.getElementById("inputTournament").value = data.t || "";
+                document.getElementById("inputExtra").value = data.e || "";
+                document.getElementById("checkExtra").checked = (data.c === 1);
+            }
+        });
 
-        // Cập nhật lên màn hình
-        function refreshDisplay() {
-            document.getElementById("name1").innerText = document.getElementById("input1").value;
-            document.getElementById("name2").innerText = document.getElementById("input2").value;
-            document.getElementById("tournament-display").innerText = document.getElementById("inputTournament").value;
-            
-            const extraDiv = document.getElementById("extra-info-display");
-            extraDiv.innerText = document.getElementById("inputExtra").value;
-            extraDiv.style.display = (document.getElementById("checkExtra").checked && document.getElementById("inputExtra").value) ? "block" : "none";
-        }
-        refreshDisplay();
-
-        function updateInfo() {
+        // Hàm cập nhật khi bấm nút dữ liệu sẽ bắn thẳng lên mây
+        window.updateInfo = function() {
             const tournament = document.getElementById("inputTournament").value.trim();
             const extra = document.getElementById("inputExtra").value.trim();
             const isChecked = document.getElementById("checkExtra").checked;
             const n1 = document.getElementById("input1").value.trim() || "Tiên";
             const n2 = document.getElementById("input2").value.trim() || "Hậu";
             
-            // Lưu vào LocalStorage để nhớ vĩnh viễn trên trình duyệt này
-            localStorage.setItem("t", tournament);
-            localStorage.setItem("e", extra);
-            localStorage.setItem("d", n1);
-            localStorage.setItem("x", n2);
-            localStorage.setItem("c", isChecked ? "1" : "0");
-            
-            refreshDisplay();
-            
-            const newURL = `?d=${encodeURIComponent(n1)}&x=${encodeURIComponent(n2)}&t=${encodeURIComponent(tournament)}&e=${encodeURIComponent(extra)}&c=${isChecked ? 1 : 0}`;
-            window.history.pushState({}, '', newURL);
-        }
-
-        if (params.get("panel") !== "1" && (params.get("d") || params.get("x") || params.get("t"))) {
-            document.getElementById("panel").style.display = "none";
+            set(dbRef, {
+                t: tournament,
+                e: extra,
+                d: n1,
+                x: n2,
+                c: isChecked ? 1 : 0
+            });
         }
     </script>
 </body>
