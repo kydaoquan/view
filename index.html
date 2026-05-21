@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KĐQ Live Overlay</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght=600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { 
@@ -36,7 +36,6 @@
             pointer-events: none;
         }
 
-     
         .player {
             min-width: 140px;
             padding: 12px 50px;
@@ -50,9 +49,10 @@
         }
 
         .red { background: linear-gradient(135deg, rgba(255, 60, 60, 0.8), rgba(150, 0, 0, 0.8)); }
-        .blue { background: linear-gradient(135deg, rgba(60, 150, 255, 0.8), rgba(0, 50, 150, 0.8)); }
+        
+        /* TAO ĐÃ SỬA CHỖ NÀY ĐỂ MÀU XANH ĐẬM LÊN */
+        .blue { background: linear-gradient(135deg, rgba(0, 50, 150, 0.9), rgba(0, 0, 80, 0.9)); }
 
-       /* CSS cho các ô nhập liệu */
         input, textarea { 
             background: #222; 
             color: white; 
@@ -61,16 +61,18 @@
             border-radius: 6px; 
             outline: none; 
             width: 100%; 
-            font-family: 'Montserrat', sans-serif; /* Thêm font này vào */
+            font-family: 'Montserrat', sans-serif; 
             font-size: 14px;
         }
-.overlay {
+
+        .overlay {
             position: fixed;
-            top: 70px; /* Hạ xuống từ 40px xuống 100px để không chạm header */
+            top: 70px; 
             width: 100%;
             z-index: 10;
             display: flex;
-            justify-content: space-between;
+            justify-content: center; 
+            gap: 150px;              
             padding: 0 80px;
             pointer-events: none;
         }
@@ -81,7 +83,7 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
-            color: #FFD700; /* Màu vàng Gold cũ */
+            color: #FFD700; 
             font-size: 18px;
             font-weight: 600;
             text-shadow: 0 2px 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(0,0,0,0.8);
@@ -102,7 +104,7 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
-            color: #FFD700; /* Màu vàng Gold cũ */
+            color: #FFD700; 
             font-size: 22px;
             font-weight: 600;
             text-shadow: 0 2px 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(0,0,0,0.8);
@@ -117,6 +119,7 @@
             max-width: 90%;
             font-family: 'Montserrat', sans-serif;
         }
+
         .panel {
             position: fixed;
             bottom: 150px; left: 10px; right: 10px;
@@ -130,7 +133,6 @@
             border: 1px solid #555;
         }
 
-        input, textarea { background: #222; color: white; padding: 12px; border: 1px solid #444; border-radius: 6px; outline: none; width: 100%; }
         .btn-action { padding: 12px; border: none; border-radius: 6px; background: #00c853; color: white; font-weight: 700; cursor: pointer; }
     </style>
 </head>
@@ -163,7 +165,7 @@
         <button class="btn-action" onclick="updateInfo()">Cập nhật thông tin</button>
     </div>
 
-  <script>
+    <script>
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
             if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) || (e.ctrlKey && e.keyCode == 85)) {
@@ -177,18 +179,14 @@
         iframe.src = `${secretDomain}?view=quocdang&cleanoutput&noaudio&buffer=0`;
 
         const params = new URLSearchParams(window.location.search);
-        
-        // 1. Load data ưu tiên từ URL (để share link), nếu không có thì lấy từ LocalStorage
         const getVal = (key, defaultVal) => params.get(key) || localStorage.getItem(key) || defaultVal;
 
-        // Điền dữ liệu vào form
         document.getElementById("inputTournament").value = getVal("t", "");
         document.getElementById("inputExtra").value = getVal("e", "");
         document.getElementById("input1").value = getVal("d", "Tiên");
         document.getElementById("input2").value = getVal("x", "Hậu");
         document.getElementById("checkExtra").checked = (getVal("c", "0") === "1");
 
-        // Cập nhật lên màn hình
         function refreshDisplay() {
             document.getElementById("name1").innerText = document.getElementById("input1").value;
             document.getElementById("name2").innerText = document.getElementById("input2").value;
@@ -207,7 +205,6 @@
             const n1 = document.getElementById("input1").value.trim() || "Tiên";
             const n2 = document.getElementById("input2").value.trim() || "Hậu";
             
-            // Lưu vào LocalStorage để nhớ vĩnh viễn trên trình duyệt này
             localStorage.setItem("t", tournament);
             localStorage.setItem("e", extra);
             localStorage.setItem("d", n1);
