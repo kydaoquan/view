@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KĐQ Live Overlay - Chuẩn Vị Trí</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        *{
+            box-sizing:border-box;
+            margin:0;
+            padding:0;
+            -webkit-tap-highlight-color:transparent;
+        }
+
+        body{
+            background:#000;
+            font-family:'Montserrat',sans-serif;
+            overflow:hidden;
+            width:100vw;
+            height:100vh;
+        }
+
+        #iframe-wrapper{
+            position:fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            z-index:1;
+        }
+
+        iframe{
+            width:100%;
+            height:100%;
+            border:none;
+            transform:translateZ(0);
+            will-change:transform;
+        }
+
+        .mouse-blocker{
+            position:fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            z-index:2;
+            background:transparent;
+            display:block;
+        }
+
+        .footer-banner{
+            position:fixed;
+            bottom:0;
+            left:0;
+            width:100%;
+            height:80px;
+            background-image:url('https://raw.githubusercontent.com/kydaoquan/view/main/footer1.PNG');
+            background-size:contain;
+            background-repeat:no-repeat;
+            background-position:center bottom;
+            z-index:5;
+            pointer-events:none;
+            display:block;
+        }
+
+        .overlay{
+            position:fixed;
+            top:70px;
+            left:0;
+            width:100%;
+            z-index:10;
+            display:flex;
+            justify-content:space-between;
+            padding:0 80px;
+            pointer-events:none;
+        }
+
+        .player{
+            padding:12px 50px;
+            border-radius:25px;
+            font-size:27px;
+            color:#fff;
+            text-align:center;
+
+            backdrop-filter:blur(8px);
+
+            border:1px solid rgba(255,255,255,0.3);
+
+            box-shadow:0 4px 15px rgba(0,0,0,0.5);
+
+            transition:
+                transform 0.1s ease,
+                opacity 0.3s ease,
+                background 0.3s ease;
+
+            max-width:35vw;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
+
+        .red{
+            background:linear-gradient(
+                135deg,
+                rgba(255,60,60,0.8),
+                rgba(150,0,0,0.8)
+            );
+        }
+
+        .blue{
+            background:linear-gradient(
+                135deg,
+                rgba(0,45,140,0.8),
+                rgba(0,10,70,0.8)
+            );
+        }
+
+        #tournament-container{
+            position:fixed;
+            top:1px;
+            left:50%;
+            transform:translateX(-50%);
+            z-index:20;
+            pointer-events:none;
+            display:none;
+        }
+
+        #tournament-display{
+            color:#FFD700;
+            font-size:24px;
+            font-weight:600;
+
+            text-shadow:
+                0 2px 10px rgba(255,215,0,0.5),
+                0 0 20px rgba(0,0,0,0.8);
+
+            background:rgba(0,0,0,0.85);
+
+            padding:10px 24px;
+
+            border-radius:30px;
+
+            border:1px solid rgba(255,215,0,0.5);
+
+            text-align:center;
+
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+
+            max-width:50vw;
+        }
+
+        #extra-info-container{
+            position:fixed;
+            bottom:45px;
+            left:50%;
+            transform:translateX(-50%);
+            z-index:10;
+            pointer-events:none;
+            display:none;
+        }
+
+        #extra-info-display{
+            color:#FFD700;
+            font-size:15px;
+            font-weight:500;
+
+            text-shadow:
+                0 2px 10px rgba(255,215,0,0.5),
+                0 0 20px rgba(0,0,0,0.8);
+
+            background:rgba(0,0,0,0.65);
+
+            padding:8px 25px;
+
+            border-radius:30px;
+
+            border:1px solid rgba(255,215,0,0.35);
+
+            text-align:center;
+
+            word-wrap:break-word;
+            max-width:80%;
+        }
+
+        .panel{
+            position:fixed;
+            bottom:12px;
+            left:12px;
+            right:12px;
+
+            background:rgba(18,18,18,0.95);
+
+            padding:16px;
+
+            border-radius:16px;
+
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+
+            z-index:100;
+
+            border:1px solid rgba(255,255,255,0.1);
+
+            box-shadow:0 12px 35px rgba(0,0,0,0.8);
+
+            backdrop-filter:blur(10px);
+        }
+
+        input[type="text"],
+        textarea{
+            background:#262626;
+            color:#ffffff;
+
+            padding:12px 14px;
+
+            border:1px solid #363636;
+
+            border-radius:8px;
+
+            outline:none;
+
+            width:100%;
+
+            font-family:'Montserrat',sans-serif;
+
+            font-size:13px;
+            font-weight:500;
+
+            transition:all 0.25s ease;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus{
+            border-color:#FFD700;
+            background:#1e1e1e;
+            box-shadow:0 0 8px rgba(255,215,0,0.2);
+        }
+
+        #input1:focus{
+            border-color:#ff4d4d;
+            box-shadow:0 0 8px rgba(255,77,77,0.2);
+        }
+
+        #input2:focus{
+            border-color:#4d94ff;
+            box-shadow:0 0 8px rgba(77,148,255,0.2);
+        }
+
+        .settings-toggle{
+            color:#b3b3b3;
+            font-size:12px;
+            font-weight:700;
+            cursor:pointer;
+            text-align:center;
+
+            padding:8px;
+
+            border-radius:8px;
+
+            background:#262626;
+
+            border:1px solid #363636;
+
+            user-select:none;
+
+            transition:all 0.2s;
+
+            text-transform:uppercase;
+            letter-spacing:0.5px;
+        }
+
+        .settings-toggle:hover{
+            background:#333;
+            color:#FFD700;
+            border-color:#FFD700;
+        }
+
+        .advanced-settings{
+            max-height:0;
+            overflow:hidden;
+
+            transition:max-height 0.3s ease-out;
+
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+        }
+
+        .slider-group{
+            background:#1a1a1a;
+
+            padding:10px;
+
+            border-radius:8px;
+
+            border:1px solid #2d2d2d;
+
+            display:flex;
+            flex-direction:column;
+            gap:5px;
+        }
+
+        .slider-group label{
+            color:#cc9900;
+            font-size:11px;
+            font-weight:700;
+
+            display:flex;
+            justify-content:space-between;
+        }
+
+        .slider-group span{
+            color:#ffffff;
+        }
+
+        .slider-group input[type="range"]{
+            width:100%;
+            cursor:pointer;
+            background:#333;
+            height:5px;
+            border-radius:3px;
+            outline:none;
+            appearance:none;
+            -webkit-appearance:none;
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb{
+            -webkit-appearance:none;
+            appearance:none;
+
+            width:12px;
+            height:12px;
+
+            border-radius:50%;
+
+            background:#FFD700;
+
+            cursor:pointer;
+
+            box-shadow:0 0 5px rgba(255,215,0,0.5);
+        }
+
+        .btn-action{
+            padding:12px;
+
+            border:none;
+
+            border-radius:8px;
+
+            background:linear-gradient(
+                135deg,
+                #00e676,
+                #00b0ff
+            );
+
+            color:white;
+
+            font-weight:700;
+
+            cursor:pointer;
+
+            font-size:14px;
+
+            text-transform:uppercase;
+
+            letter-spacing:1px;
+
+            box-shadow:0 4px 12px rgba(0,230,118,0.2);
+
+            transition:all 0.2s ease;
+        }
+
+        .btn-action:active{
+            transform:scale(0.98);
+            box-shadow:0 2px 6px rgba(0,230,118,0.4);
+        }
+
+        .checkbox-container{
+            color:#b3b3b3;
+
+            display:flex;
+            align-items:center;
+            gap:6px;
+
+            font-size:12px;
+            font-weight:600;
+
+            cursor:pointer;
+
+            user-select:none;
+        }
+
+        .checkbox-container input{
+            cursor:pointer;
+            width:14px;
+            height:14px;
+            accent-color:#FFD700;
+        }
+    </style>
+</head>
+
+<body oncontextmenu="return false;">
+
+    <div id="iframe-wrapper">
+        <iframe
+            id="stream-iframe"
+            src=""
+            allow="camera *; microphone *; autoplay *; fullscreen *"
+            allowfullscreen
+        ></iframe>
+    </div>
+
+    <div class="mouse-blocker" id="mouseBlocker"></div>
+
+    <div class="footer-banner" id="footerBanner"></div>
+
+    <div class="overlay" id="playerOverlay">
+        <div class="player red" id="name1"></div>
+        <div class="player blue" id="name2"></div>
+    </div>
+
+    <div id="tournament-container">
+        <div id="tournament-display"></div>
+    </div>
+
+    <div id="extra-info-container">
+        <div id="extra-info-display"></div>
+    </div>
+
+    <div class="panel" id="panel">
+
+        <input
+            id="inputYoutube"
+            type="text"
+            placeholder="Nhập ID của bạn hoặc link YouTube... link quay phát khác nếu có. "
+        >
+
+        <input
+            id="inputTournament"
+            type="text"
+            placeholder="Tiêu đề và thông tin giải đấu (Nếu để trống thì sẽ ẩn)"
+        >
+
+        <textarea
+            id="inputExtra"
+            placeholder="Thể thức thi đấu... (Ví dụ: hệ Thuỵ Sĩ, 10 phút + 5 giây)"
+            style="height:42px; resize:none;"
+        ></textarea>
+
+        <div style="display:flex; gap:8px; align-items:center;">
+
+            <input
+                id="input1"
+                type="text"
+                placeholder="Tên Đỏ"
+                style="flex:1;"
+            >
+
+            <input
+                id="input2"
+                type="text"
+                placeholder="Tên Xanh"
+                style="flex:1;"
+            >
+
+            <label class="checkbox-container">
+                <input type="checkbox" id="checkExtra">
+                Info
+            </label>
+
+        </div>
+
+        <div
+            class="settings-toggle"
+            id="toggleBtn"
+            onclick="toggleAdvancedSettings()"
+        >
+            ⚙️ Cấu hình tọa độ nâng cao
+        </div>
+
+        <div class="advanced-settings" id="advancedSettings">
+
+            <div class="slider-group">
+                <label>
+                    ↕️ Vị trí Top:
+                    <span id="valTop">70px</span>
+                </label>
+
+                <input
+                    type="range"
+                    id="rangeTop"
+                    min="0"
+                    max="800"
+                    value="70"
+                    oninput="updateSliderLabels()"
+                >
+            </div>
+
+            <div class="slider-group">
+                <label>
+                    ↔️ Khoảng cách 2 lề:
+                    <span id="valPadding">80px</span>
+                </label>
+
+                <input
+                    type="range"
+                    id="rangePadding"
+                    min="0"
+                    max="400"
+                    value="80"
+                    oninput="updateSliderLabels()"
+                >
+            </div>
+
+            <div class="slider-group">
+                <label>
+                    📐 Kích thước chữ:
+                    <span id="valFont">27px</span>
+                </label>
+
+                <input
+                    type="range"
+                    id="rangeFont"
+                    min="14"
+                    max="50"
+                    value="27"
+                    oninput="updateSliderLabels()"
+                >
+            </div>
+
+            <div class="slider-group">
+                <label>
+                    ↕️ Padding dọc:
+                    <span id="valPadY">12px</span>
+                </label>
+
+                <input
+                    type="range"
+                    id="rangePadY"
+                    min="4"
+                    max="40"
+                    value="12"
+                    oninput="updateSliderLabels()"
+                >
+            </div>
+
+            <div class="slider-group">
+                <label>
+                    ↔️ Padding ngang:
+                    <span id="valPadX">50px</span>
+                </label>
+
+                <input
+                    type="range"
+                    id="rangePadX"
+                    min="10"
+                    max="150"
+                    value="50"
+                    oninput="updateSliderLabels()"
+                >
+            </div>
+
+        </div>
+
+        <button class="btn-action" onclick="updateInfo()">
+            Cập nhật thông tin
+        </button>
+
+    </div>
+
+    <script type="module">
+
+        import { initializeApp }
+        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+        import {
+            getDatabase,
+            ref,
+            update,
+            onValue
+        }
+        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+
+            apiKey: "AIzaSy...",
+
+            authDomain: "kydaoquan.firebaseapp.com",
+
+            databaseURL:
+            "https://kydaoquan-default-rtdb.firebaseio.com",
+
+            projectId: "kydaoquan",
+
+            storageBucket: "kydaoquan.appspot.com",
+
+            messagingSenderId: "...",
+
+            appId: "..."
+        };
+
+        const app = initializeApp(firebaseConfig);
+
+        const db = getDatabase(app);
+
+        const dbRef = ref(db, "overlay_data");
+
+        const params = new URLSearchParams(window.location.search);
+
+        if (params.get("panel") !== "1") {
+            document.getElementById("panel").style.display = "none";
+        }
+
+        let isSettingsOpen = false;
+
+        window.toggleAdvancedSettings = function () {
+
+            const settingsDiv =
+                document.getElementById("advancedSettings");
+
+            settingsDiv.style.maxHeight =
+                !isSettingsOpen
+                ? "400px"
+                : "0px";
+
+            isSettingsOpen = !isSettingsOpen;
+        }
+
+        window.updateSliderLabels = function () {
+
+            document.getElementById("valTop").innerText =
+                document.getElementById("rangeTop").value + "px";
+
+            document.getElementById("valPadding").innerText =
+                document.getElementById("rangePadding").value + "px";
+
+            document.getElementById("valFont").innerText =
+                document.getElementById("rangeFont").value + "px";
+
+            document.getElementById("valPadY").innerText =
+                document.getElementById("rangePadY").value + "px";
+
+            document.getElementById("valPadX").innerText =
+                document.getElementById("rangePadX").value + "px";
+        }
+
+        function ĐoiLinkThongMinh(urlOrId) {
+
+            if (!urlOrId) return "";
+
+            document.getElementById("mouseBlocker").style.display = "block";
+
+            // ===== YOUTUBE =====
+
+            let regExp =
+                /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+
+            let match = urlOrId.match(regExp);
+
+            if (match && match[2].length == 11) {
+
+                return `https://www.youtube.com/embed/${match[2]}?autoplay=1&mute=1&controls=0&rel=0&playsinline=1`;
+            }
+
+            // ===== LINK VDO.NINJA =====
+
+            if (
+                urlOrId.includes("vdo.ninja") ||
+                urlOrId.includes("vdo.social")
+            ) {
+
+                return urlOrId;
+            }
+
+            // ===== CHỈ NHẬP ID VDO =====
+
+            if (!urlOrId.includes("http")) {
+
+                return `https://vdo.ninja/?view=${encodeURIComponent(urlOrId)}
+&cover
+&cleanoutput
+&transparent
+&noheader
+&autostart
+&mute
+&quality=80
+&bitrate=4000
+&framerate=30`
+                .replace(/\s+/g, "");
+            }
+
+            // ===== LINK KHÁC =====
+
+            return urlOrId;
+        }
+
+        let currentVideoUrl = "";
+
+        onValue(dbRef, (snapshot) => {
+
+            const data = snapshot.val();
+
+            if (!data) return;
+
+            const overlayDiv =
+                document.getElementById("playerOverlay");
+
+            overlayDiv.style.top =
+                (data.pTop ?? 70) + "px";
+
+            overlayDiv.style.padding =
+                `0 ${(data.pPadX_Overlay ?? 80)}px`;
+
+            const players =
+                document.querySelectorAll(".player");
+
+            players.forEach(p => {
+
+                p.style.fontSize =
+                    (data.pFont ?? 27) + "px";
+
+                p.style.padding =
+                    `${(data.pPadY ?? 12)}px ${(data.pPadX_Box ?? 50)}px`;
+            });
+
+            overlayDiv.style.display = "flex";
+
+            document.getElementById("footerBanner").style.display = "block";
+
+            document.getElementById("name1").innerText =
+                data.d || "Tiên";
+
+            document.getElementById("name2").innerText =
+                data.x || "Hậu";
+
+            // ===== TOURNAMENT =====
+
+            const tContainer =
+                document.getElementById("tournament-container");
+
+            const tDisplay =
+                document.getElementById("tournament-display");
+
+            if (data.t) {
+
+                tDisplay.innerText = data.t;
+
+                tContainer.style.display = "flex";
+
+            } else {
+
+                tContainer.style.display = "none";
+            }
+
+            // ===== EXTRA INFO =====
+
+            const eContainer =
+                document.getElementById("extra-info-container");
+
+            const eDisplay =
+                document.getElementById("extra-info-display");
+
+            if (data.c === 1 && data.e) {
+
+                eDisplay.innerText = data.e;
+
+                eContainer.style.display = "flex";
+
+            } else {
+
+                eContainer.style.display = "none";
+            }
+
+            // ===== VIDEO =====
+
+            if (data.yt && data.yt !== currentVideoUrl) {
+
+                currentVideoUrl = data.yt;
+
+                const iframe =
+                    document.getElementById("stream-iframe");
+
+                iframe.src = ĐoiLinkThongMinh(data.yt);
+            }
+
+            else if (!data.yt && currentVideoUrl !== "") {
+
+                currentVideoUrl = "";
+
+                document.getElementById("stream-iframe").src = "";
+            }
+
+            // ===== LOAD UI =====
+
+            document.getElementById("rangeTop").value =
+                data.pTop ?? 70;
+
+            document.getElementById("rangePadding").value =
+                data.pPadX_Overlay ?? 80;
+
+            document.getElementById("rangeFont").value =
+                data.pFont ?? 27;
+
+            document.getElementById("rangePadY").value =
+                data.pPadY ?? 12;
+
+            document.getElementById("rangePadX").value =
+                data.pPadX_Box ?? 50;
+
+            updateSliderLabels();
+
+            document.getElementById("input1").value =
+                data.d || "";
+
+            document.getElementById("input2").value =
+                data.x || "";
+
+            document.getElementById("inputTournament").value =
+                data.t || "";
+
+            document.getElementById("inputExtra").value =
+                data.e || "";
+
+            document.getElementById("checkExtra").checked =
+                (data.c === 1);
+
+            document.getElementById("inputYoutube").value =
+                data.yt || "";
+        });
+
+        let isUpdating = false;
+
+        window.updateInfo = async function () {
+
+            if (isUpdating) return;
+
+            isUpdating = true;
+
+            await update(dbRef, {
+
+                t:
+                document.getElementById("inputTournament")
+                .value
+                .trim(),
+
+                e:
+                document.getElementById("inputExtra")
+                .value
+                .trim(),
+
+                d:
+                document.getElementById("input1")
+                .value
+                .trim(),
+
+                x:
+                document.getElementById("input2")
+                .value
+                .trim(),
+
+                c:
+                document.getElementById("checkExtra")
+                .checked
+                ? 1
+                : 0,
+
+                yt:
+                document.getElementById("inputYoutube")
+                .value
+                .trim(),
+
+                pTop:
+                parseInt(
+                    document.getElementById("rangeTop").value
+                ),
+
+                pPadX_Overlay:
+                parseInt(
+                    document.getElementById("rangePadding").value
+                ),
+
+                pFont:
+                parseInt(
+                    document.getElementById("rangeFont").value
+                ),
+
+                pPadY:
+                parseInt(
+                    document.getElementById("rangePadY").value
+                ),
+
+                pPadX_Box:
+                parseInt(
+                    document.getElementById("rangePadX").value
+                )
+            });
+
+            setTimeout(() => {
+                isUpdating = false;
+            }, 500);
+        }
+
+    </script>
+
+</body>
+</html>
